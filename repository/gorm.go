@@ -3,9 +3,9 @@ package repository
 import (
 	"errors"
 
-	"github.com/containous/traefik/log"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite" // Needed for gorm
+	log "github.com/sirupsen/logrus"
 )
 
 // ErrGormNotInitialized is returned if a repository is initialized before the database connection
@@ -21,14 +21,14 @@ var (
 func InitDatabaseConnection(name string) error {
 	db, err := gorm.Open("sqlite3", name)
 	if err != nil {
-		log.Error(0, "Could not open datbase: %v", err)
+		log.WithFields(log.Fields{"db_name": name, "err": err}).Error("Could not open datbase")
 		return err
 	}
-	log.Info("Initialized database connection")
+	log.WithField("db_name", name).Info("Initialized database connection")
 
 	err = db.AutoMigrate(databaseModels...).Error
 	if err != nil {
-		log.Error(0, "Failed to auto migrate db structs: %v", err)
+		log.WithFields(log.Fields{"db_name": name, "err": err}).Error("Failed to auto migrate db structs")
 		return err
 	}
 	databaseConnection = db
@@ -39,7 +39,7 @@ func InitDatabaseConnection(name string) error {
 // CloseDatabaseConnection closes the gorm connection
 func CloseDatabaseConnection() {
 	if err := databaseConnection.Close(); err != nil {
-		log.Fatal(0, "Error shutting down gorm: %v", err)
+		log.WithField("err", err).Fatal("Error shutting down gorm")
 		return
 	}
 
