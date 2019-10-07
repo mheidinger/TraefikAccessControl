@@ -28,3 +28,12 @@ func (rep *SiteRepository) Create(site *models.Site) (err error) {
 	}
 	return
 }
+
+func (rep *SiteRepository) Clear() (err error) {
+	err = databaseConnection.Delete(&models.Site{}).Error
+	if err != nil {
+		log.WithField("err", err).Error("Could not clear sites")
+		return
+	}
+	return
+}

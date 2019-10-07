@@ -28,3 +28,12 @@ func (rep *TokenRepository) Create(token *models.Token) (err error) {
 	}
 	return
 }
+
+func (rep *TokenRepository) Clear() (err error) {
+	err = databaseConnection.Delete(&models.Token{}).Error
+	if err != nil {
+		log.WithField("err", err).Error("Could not clear tokens")
+		return
+	}
+	return
+}

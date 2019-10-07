@@ -28,3 +28,12 @@ func (rep *UserRepository) Create(user *models.User) (err error) {
 	}
 	return
 }
+
+func (rep *UserRepository) Clear() (err error) {
+	err = databaseConnection.Delete(&models.User{}).Error
+	if err != nil {
+		log.WithField("err", err).Error("Could not clear users")
+		return
+	}
+	return
+}
