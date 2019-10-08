@@ -2,8 +2,6 @@ package repository
 
 import (
 	"TraefikAccessControl/models"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // Add used models to enable auto migration for them
@@ -22,18 +20,10 @@ func CreateTokenRepository() (*TokenRepository, error) {
 
 func (rep *TokenRepository) Create(token *models.Token) (err error) {
 	err = databaseConnection.Create(token).Error
-	if err != nil {
-		log.WithField("err", err).Error("Could not create token")
-		return
-	}
 	return
 }
 
 func (rep *TokenRepository) Clear() (err error) {
 	err = databaseConnection.Delete(&models.Token{}).Error
-	if err != nil {
-		log.WithField("err", err).Error("Could not clear tokens")
-		return
-	}
 	return
 }

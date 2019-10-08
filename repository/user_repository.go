@@ -2,8 +2,6 @@ package repository
 
 import (
 	"TraefikAccessControl/models"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // Add used models to enable auto migration for them
@@ -22,18 +20,22 @@ func CreateUserRepository() (*UserRepository, error) {
 
 func (rep *UserRepository) Create(user *models.User) (err error) {
 	err = databaseConnection.Create(user).Error
-	if err != nil {
-		log.WithField("err", err).Error("Could not create user")
-		return
-	}
+	return
+}
+
+func (rep *UserRepository) GetByID(id int) (user *models.User, err error) {
+	user = &models.User{}
+	err = databaseConnection.First(user, &models.User{ID: id}).Error
+	return
+}
+
+func (rep *UserRepository) GetByUsername(username string) (user *models.User, err error) {
+	user = &models.User{}
+	err = databaseConnection.First(user, &models.User{Username: username}).Error
 	return
 }
 
 func (rep *UserRepository) Clear() (err error) {
 	err = databaseConnection.Delete(&models.User{}).Error
-	if err != nil {
-		log.WithField("err", err).Error("Could not clear users")
-		return
-	}
 	return
 }

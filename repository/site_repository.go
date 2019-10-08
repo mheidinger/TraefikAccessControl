@@ -2,8 +2,6 @@ package repository
 
 import (
 	"TraefikAccessControl/models"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // Add used models to enable auto migration for them
@@ -22,18 +20,10 @@ func CreateSiteRepository() (*SiteRepository, error) {
 
 func (rep *SiteRepository) Create(site *models.Site) (err error) {
 	err = databaseConnection.Create(site).Error
-	if err != nil {
-		log.WithField("err", err).Error("Could not create site")
-		return
-	}
 	return
 }
 
 func (rep *SiteRepository) Clear() (err error) {
 	err = databaseConnection.Delete(&models.Site{}).Error
-	if err != nil {
-		log.WithField("err", err).Error("Could not clear sites")
-		return
-	}
 	return
 }

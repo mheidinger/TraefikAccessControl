@@ -6,10 +6,15 @@ build: $(sourcefiles)
 run: build
 	./TraefikAccessControl
 
+run-import: build
+	./TraefikAccessControl -import_name tac_data.json -force_import
+
+gen-data:
+	go run testData.go
+
 test:
 	go test ./...
 
-cleardb:
+clearall:
 	-rm tac.db
-
-clearall:	cleardb
+	-rm tac_data.json

@@ -1,6 +1,13 @@
 package manager
 
-import "TraefikAccessControl/repository"
+import (
+	"TraefikAccessControl/models"
+	"TraefikAccessControl/repository"
+	"fmt"
+	"strings"
+
+	log "github.com/sirupsen/logrus"
+)
 
 type SiteManager struct {
 	siteRep        *repository.SiteRepository
@@ -29,6 +36,28 @@ func GetSiteManager() *SiteManager {
 
 func (mgr *SiteManager) Close() {
 	mgr.done <- struct{}{}
+}
+
+func (mgr *SiteManager) CreateSite(site *models.Site) (err error) {
+	createLog := log.WithFields(log.Fields{"host": site.Host, "pathPrefix": site.PathPrefix})
+
+	if site.Host == "" || site.ID != 0 {
+		return fmt.Errorf("Site not valid")
+	}
+
+	site.Host = strings.TrimSpace(site.Host)
+	site.PathPrefix = strings.TrimSpace(site.PathPrefix)
+	if !strings.HasPrefix(site.PathPrefix, "/") {
+		site.PathPrefix = "/" + site.PathPrefix
+	}
+
+	err = mgr.siteRep.Create(site)
+	if err != nil {
+		createLog.WithField("err", err).Error("Failed to save site")
+		return fmt.Errorf("Failed to save site")
+	}
+
+	return
 }
 
 func (mgr *SiteManager) ClearAll() (err error) {

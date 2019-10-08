@@ -34,16 +34,18 @@ func (mgr *ImportExportManager) Close() {
 }
 
 func (mgr *ImportExportManager) ImportFile(filePath string, force bool) (err error) {
+	importLog := log.WithField("import_path", filePath)
+
 	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		log.WithFields(log.Fields{"import_path": filePath, "err": err}).Error("Failed to open import file")
+		importLog.WithField("err", err).Error("Failed to open import file")
 		return err
 	}
 
 	importExport := &models.ImportExport{}
 	err = json.Unmarshal(data, importExport)
 	if err != nil {
-		log.WithFields(log.Fields{"import_path": filePath, "err": err}).Error("Failed to unmarshal import file")
+		importLog.WithField("err", err).Error("Failed to unmarshal import file")
 		return err
 	}
 
@@ -52,13 +54,33 @@ func (mgr *ImportExportManager) ImportFile(filePath string, force bool) (err err
 		GetSiteManager().ClearAll()
 	}
 
-	userIDMapping := make(map[int]int, 0)
+	userIDMapping := make(map[int]int)
 	for _, user := range importExport.Users {
 		importID := user.ID
 		user.ID = 0
 
-		err = GetAuthManager().CreateUser(user)
+		_, err = GetAuthManager().CreateUser(user)
+		if err != nil {
+			importLog.WithFields(log.Fields{"username": user.Username, "err": err}).Warn("Failed to create user from import")
+			continue
+		}
+		userIDMapping[importID] = user.ID
 	}
+
+	siteIDMapping := make(map[int]int)
+	for _, site := range importExport.Sites {
+		importID := site.ID
+		site.ID = 0
+
+		err = GetSiteManager().CreateSite(site)
+		if err != nil {
+			importLog.WithFields(log.Fields{"host": site.Host, "pathPrefix": site.PathPrefix, "err": err}).Warn("Failed to create site from import")
+			continue
+		}
+		siteIDMapping[importID] = site.ID
+	}
+
+	// TODO: Import SiteMappings
 
 	return
 }
