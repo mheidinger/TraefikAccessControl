@@ -29,7 +29,7 @@ func CreateAuthManager(userRep *repository.UserRepository, tokenRep *repository.
 	authManager = &AuthManager{
 		userRep:     userRep,
 		tokenRep:    tokenRep,
-		tokenLength: 20,
+		tokenLength: 30,
 		tokenExpiry: 24,
 		done:        make(chan struct{}),
 	}
@@ -86,16 +86,9 @@ func (mgr *AuthManager) CreateUser(user *models.User) (*models.Token, error) {
 func (mgr *AuthManager) CreateUserToken(userID int, isBearer bool) (token *models.Token, err error) {
 	createLogger := log.WithFields(log.Fields{"userID": userID, "isBearer": isBearer})
 
-	tokenString := utils.RandomString(mgr.tokenLength)
-	tokenHash, err := crypt.HashScrypt(tokenString)
-	if err != nil {
-		createLogger.WithField("err", err).Error("Failed to hash token")
-		return nil, fmt.Errorf("Failed to hash token")
-	}
-
 	token = &models.Token{
 		UserID:   userID,
-		Token:    tokenHash,
+		Token:    utils.RandomString(mgr.tokenLength),
 		IsBearer: isBearer,
 	}
 
@@ -109,7 +102,49 @@ func (mgr *AuthManager) CreateUserToken(userID int, isBearer bool) (token *model
 		return nil, fmt.Errorf("Failed to save token")
 	}
 
-	token.Token = tokenString
+	return
+}
+
+func (mgr *AuthManager) ValidateTokenString(tokenString string, fromBearer bool) (user *models.User, err error) {
+	token, err := mgr.tokenRep.GetByTokenString(tokenString)
+	if err != nil && !repository.IsRecordNotFoundError(err) {
+		log.WithField("err", err).Error("Failed to get token by string")
+		return nil, fmt.Errorf("Failed to get token by string")
+	} else if repository.IsRecordNotFoundError(err) {
+		return nil, fmt.Errorf("Token not found")
+	}
+
+	if time.Now().After(token.ExpiresAt) {
+		return nil, fmt.Errorf("Token expired")
+	}
+
+	if token.IsBearer != fromBearer {
+		return nil, fmt.Errorf("Bearer status of token does not math auth method")
+	}
+
+	user, err = mgr.userRep.GetByID(token.UserID)
+	if err != nil {
+		log.WithFields(log.Fields{"userID": token.UserID, "err": err}).Error("Failed to get user of token")
+		return nil, fmt.Errorf("Failed to get token user")
+	}
+	return
+}
+
+func (mgr *AuthManager) ValidateCredentials(username, password string) (user *models.User, err error) {
+	user, err = mgr.userRep.GetByUsername(username)
+	if err != nil && !repository.IsRecordNotFoundError(err) {
+		log.WithField("err", err).Error("Failed to get user by username")
+		return nil, fmt.Errorf("Failed to get user by username")
+	} else if repository.IsRecordNotFoundError(err) {
+		return nil, fmt.Errorf("User not found")
+	}
+
+	if ok, err := crypt.ValidateScryptPassword(password, user.Password); err == nil && !ok {
+		return nil, fmt.Errorf("Password not correct")
+	} else if err != nil {
+		log.WithField("err", err).Error("Failed to validate scrypt password")
+		return nil, fmt.Errorf("Failed to validate password")
+	}
 
 	return
 }

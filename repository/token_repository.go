@@ -23,6 +23,12 @@ func (rep *TokenRepository) Create(token *models.Token) (err error) {
 	return
 }
 
+func (rep *TokenRepository) GetByTokenString(tokenString string) (token *models.Token, err error) {
+	token = &models.Token{}
+	err = databaseConnection.First(token, &models.Token{Token: tokenString}).Error
+	return
+}
+
 func (rep *TokenRepository) Clear() (err error) {
 	err = databaseConnection.Delete(&models.Token{}).Error
 	return

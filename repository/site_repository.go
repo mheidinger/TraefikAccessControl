@@ -23,6 +23,11 @@ func (rep *SiteRepository) Create(site *models.Site) (err error) {
 	return
 }
 
+func (rep *SiteRepository) GetByHost(host string) (sites []*models.Site, err error) {
+	err = databaseConnection.Where(&models.Site{Host: host}).Find(&sites).Error
+	return
+}
+
 func (rep *SiteRepository) Clear() (err error) {
 	err = databaseConnection.Delete(&models.Site{}).Error
 	return

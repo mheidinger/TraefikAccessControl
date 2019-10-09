@@ -41,6 +41,7 @@ func main() {
 
 	_ = manager.CreateAuthManager(userRep, tokenRep)
 	_ = manager.CreateSiteManager(siteRep, siteMappingRep)
+	_ = manager.CreateAccessManager()
 	importExportManager := manager.CreateImportExportManager()
 
 	if importNamePtr != nil && *importNamePtr != "" {

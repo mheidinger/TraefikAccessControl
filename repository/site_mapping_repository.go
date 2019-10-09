@@ -2,8 +2,6 @@ package repository
 
 import (
 	"TraefikAccessControl/models"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // Add used models to enable auto migration for them
@@ -22,18 +20,16 @@ func CreateSiteMappingRepository() (*SiteMappingRepository, error) {
 
 func (rep *SiteMappingRepository) Create(siteMapping *models.SiteMapping) (err error) {
 	err = databaseConnection.Create(siteMapping).Error
-	if err != nil {
-		log.WithField("err", err).Error("Could not create site mapping")
-		return
-	}
+	return
+}
+
+func (rep *SiteMappingRepository) GetByUserSite(userID, siteID int) (siteMapping *models.SiteMapping, err error) {
+	siteMapping = &models.SiteMapping{}
+	err = databaseConnection.First(siteMapping, &models.SiteMapping{UserID: userID, SiteID: siteID}).Error
 	return
 }
 
 func (rep *SiteMappingRepository) Clear() (err error) {
 	err = databaseConnection.Delete(&models.SiteMapping{}).Error
-	if err != nil {
-		log.WithField("err", err).Error("Could not clear site mappings")
-		return
-	}
 	return
 }
