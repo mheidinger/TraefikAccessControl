@@ -1,7 +1,6 @@
 package server
 
 import (
-	"io"
 	"net/http"
 	"net/url"
 
@@ -34,8 +33,7 @@ func (s *Server) accessHandler() httprouter.Handle {
 		log.WithFields(log.Fields{"method": method, "host": host, "url": url}).Info("New request")
 
 		if method == "" || host == "" || err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, "Not all needed headers present")
+			http.Error(w, "Not all needed headers present", http.StatusBadRequest)
 			return
 		}
 

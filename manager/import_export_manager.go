@@ -61,7 +61,7 @@ func (mgr *ImportExportManager) ImportFile(filePath string, force bool) (err err
 
 		_, err = GetAuthManager().CreateUser(user)
 		if err != nil {
-			importLog.WithFields(log.Fields{"username": user.Username, "err": err}).Warn("Failed to create user from import")
+			importLog.Warn("Failed to create user from import")
 			continue
 		}
 		userIDMapping[importID] = user.ID
@@ -74,13 +74,32 @@ func (mgr *ImportExportManager) ImportFile(filePath string, force bool) (err err
 
 		err = GetSiteManager().CreateSite(site)
 		if err != nil {
-			importLog.WithFields(log.Fields{"host": site.Host, "pathPrefix": site.PathPrefix, "err": err}).Warn("Failed to create site from import")
+			importLog.Warn("Failed to create site from import")
 			continue
 		}
 		siteIDMapping[importID] = site.ID
 	}
 
-	// TODO: Import SiteMappings
+	for _, siteMapping := range importExport.SiteMappings {
+		realUserID, ok := userIDMapping[siteMapping.UserID]
+		if !ok {
+			importLog.WithField("userID", siteMapping.UserID).Warn("UserID not found in mapping")
+			continue
+		}
+		realSiteID, ok := siteIDMapping[siteMapping.SiteID]
+		if !ok {
+			importLog.WithField("siteID", siteMapping.SiteID).Warn("SiteID not found in mapping")
+			continue
+		}
+
+		siteMapping.UserID = realUserID
+		siteMapping.SiteID = realSiteID
+		err = GetSiteManager().CreateSiteMapping(siteMapping)
+		if err != nil {
+			importLog.Warn("Failed to create site mapping from import")
+			continue
+		}
+	}
 
 	return
 }

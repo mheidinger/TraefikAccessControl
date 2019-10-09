@@ -35,7 +35,17 @@ func (rep *UserRepository) GetByUsername(username string) (user *models.User, er
 	return
 }
 
+func (rep *UserRepository) Update(user *models.User) (err error) {
+	err = databaseConnection.Save(user).Error
+	return
+}
+
 func (rep *UserRepository) Clear() (err error) {
 	err = databaseConnection.Delete(&models.User{}).Error
+	return
+}
+
+func (rep *UserRepository) Count() (count int, err error) {
+	err = databaseConnection.Model(&models.User{}).Count(&count).Error
 	return
 }

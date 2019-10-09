@@ -60,6 +60,22 @@ func (mgr *SiteManager) CreateSite(site *models.Site) (err error) {
 	return
 }
 
+func (mgr *SiteManager) CreateSiteMapping(siteMapping *models.SiteMapping) (err error) {
+	createLog := log.WithFields(log.Fields{"userID": siteMapping.UserID, "siteID": siteMapping.SiteID, "BasicAuthAllowed": siteMapping.BasicAuthAllowed})
+
+	if siteMapping.UserID <= 0 || siteMapping.SiteID <= 0 {
+		return fmt.Errorf("SiteMapping not valid")
+	}
+
+	err = mgr.siteMappingRep.Create(siteMapping)
+	if err != nil {
+		createLog.WithField("err", err).Error("Failed to save site")
+		return fmt.Errorf("Failed to save site mapping")
+	}
+
+	return
+}
+
 func (mgr *SiteManager) ClearAll() (err error) {
 	err = mgr.siteRep.Clear()
 	if err != nil {
