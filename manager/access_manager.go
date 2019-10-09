@@ -33,22 +33,24 @@ func (mgr *AccessManager) Close() {
 	mgr.done <- struct{}{}
 }
 
-func (mgr *AccessManager) CheckAccessToken(host, path, tokenString string, fromBearer bool, requestLogger *log.Entry) (ok bool, err error) {
-	user, err := GetAuthManager().ValidateTokenString(tokenString, fromBearer)
+func (mgr *AccessManager) CheckAccessToken(host, path, tokenString string, fromBearer bool, requestLogger *log.Entry) (ok bool, user *models.User, err error) {
+	user, err = GetAuthManager().ValidateTokenString(tokenString, fromBearer)
 	if err != nil {
 		requestLogger.WithField("err", err).Info("Token not valid")
 		return
 	}
-	return mgr.CheckAccess(host, path, user, false, requestLogger)
+	ok, err = mgr.CheckAccess(host, path, user, false, requestLogger)
+	return
 }
 
-func (mgr *AccessManager) CheckAccessCredentials(host, path, username, password string, fromBasicAuth bool, requestLogger *log.Entry) (ok bool, err error) {
-	user, err := GetAuthManager().ValidateCredentials(username, password)
+func (mgr *AccessManager) CheckAccessCredentials(host, path, username, password string, fromBasicAuth bool, requestLogger *log.Entry) (ok bool, user *models.User, err error) {
+	user, err = GetAuthManager().ValidateCredentials(username, password)
 	if err != nil {
 		requestLogger.WithField("err", err).Info("Credentials not valid")
 		return
 	}
-	return mgr.CheckAccess(host, path, user, fromBasicAuth, requestLogger)
+	ok, err = mgr.CheckAccess(host, path, user, fromBasicAuth, requestLogger)
+	return
 }
 
 func (mgr *AccessManager) CheckAccess(host, path string, user *models.User, fromBasicAuth bool, requestLogger *log.Entry) (ok bool, err error) {
