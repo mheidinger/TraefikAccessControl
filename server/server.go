@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/gin-contrib/multitemplate"
 	log "github.com/sirupsen/logrus"
 	ginlogrus "github.com/toorop/gin-logrus"
+	"github.com/weppos/publicsuffix-go/publicsuffix"
 
 	"github.com/gin-gonic/gin"
 )
@@ -42,9 +44,10 @@ func (s *Server) buildRoutes() {
 	s.Router.GET("/access", s.accessHandler())
 
 	s.Router.Static("/static", "static")
-	s.Router.GET("/", s.dashboardHandler())
-	s.Router.GET("/login", s.loginHandler())
-	s.Router.GET("/forbidden", s.forbiddenHandler())
+	s.Router.GET("/", s.dashboardUIHandler())
+	s.Router.GET("/login", s.loginUIHandler())
+	s.Router.POST("/login", s.loginHandler())
+	s.Router.GET("/forbidden", s.forbiddenUIHandler())
 }
 
 func (s *Server) accessHandler() gin.HandlerFunc {
@@ -98,38 +101,78 @@ func (s *Server) accessHandler() gin.HandlerFunc {
 		if accessGranted {
 			c.Status(http.StatusOK)
 		} else if isBrowser && user == nil {
-			c.Redirect(http.StatusTemporaryRedirect, s.getRedirectURL(*c.Request.URL, "/login", rawURL))
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", &rawURL, nil))
 		} else if isBrowser && user != nil {
-			c.Redirect(http.StatusTemporaryRedirect, s.getRedirectURL(*c.Request.URL, "/forbidden", rawURL))
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/forbidden", &rawURL, nil))
 		} else {
 			c.String(http.StatusUnauthorized, "No access granted")
 		}
 	}
 }
 
-func (s *Server) getRedirectURL(reqURL url.URL, path, origURL string) string {
+func (s *Server) getRedirectURL(reqURL url.URL, path string, origURL, errVal *string) string {
 	redirectURL := reqURL
 	redirectURL.Path = path
 	q := url.Values{}
-	q.Set("orig_url", origURL)
+	if origURL != nil {
+		q.Set("orig_url", *origURL)
+	}
+	if errVal != nil {
+		q.Set("error", *errVal)
+	}
 	redirectURL.RawQuery = q.Encode()
 
 	return redirectURL.String()
 }
 
-func (s *Server) dashboardHandler() gin.HandlerFunc {
+func (s *Server) loginHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		log.WithField("postform", c.Request.PostForm).Info("Post form")
+
+		username := c.PostForm("username")
+		password := c.PostForm("password")
+
+		user, err := manager.GetAuthManager().ValidateCredentials(username, password)
+		if err != nil {
+			errVal := "incorrect"
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, &errVal))
+			return
+		}
+		token, err := manager.GetAuthManager().CreateUserToken(user.ID, false)
+		if err != nil {
+			errVal := "server"
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, &errVal))
+			return
+		}
+
+		maxAge := int(token.ExpiresAt.Sub(time.Now()).Seconds())
+		host, err := publicsuffix.Domain(c.Request.Host)
+		if err != nil {
+			log.WithFields(log.Fields{"host": c.Request.Host, "err": err}).Error("Could not determine domain, use host instead")
+			host = c.Request.Host
+		}
+		c.SetCookie("tac_token", token.Token, maxAge, "", host, false, true)
+
+		c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, nil))
+	}
+}
+
+func (s *Server) dashboardUIHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.HTML(http.StatusOK, "dashboard", nil)
 	}
 }
 
-func (s *Server) loginHandler() gin.HandlerFunc {
+func (s *Server) loginUIHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.HTML(http.StatusOK, "login", nil)
+
+		c.HTML(http.StatusOK, "login", gin.H{
+			"error": c.Query("error"),
+		})
 	}
 }
 
-func (s *Server) forbiddenHandler() gin.HandlerFunc {
+func (s *Server) forbiddenUIHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.HTML(http.StatusForbidden, "forbidden", nil)
 	}
