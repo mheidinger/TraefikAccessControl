@@ -53,29 +53,23 @@ func (s *Server) buildRoutes() {
 func (s *Server) accessHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		host := c.Request.Header.Get("X-Forwarded-Host")
-		rawURL := c.Request.Header.Get("X-Forwarded-Uri")
-		requestLogger := log.WithFields(log.Fields{"host": host, "rawURL": rawURL})
+		path := c.Request.Header.Get("X-Forwarded-Uri")
+		requestLogger := log.WithFields(log.Fields{"host": host, "path": path})
 
-		if host == "" || rawURL == "" {
-			requestLogger.Info("Not all needed headers present")
+		if host == "" || path == "" {
 			c.String(http.StatusBadRequest, "Not all needed headers present")
 			return
 		}
-
-		parsedURL, err := url.Parse(rawURL)
+		completeURL, err := url.Parse(host)
 		if err != nil {
-			requestLogger.Error("Failed to parse URL")
-			c.String(http.StatusBadRequest, "Faild to parse URL")
+			c.String(http.StatusBadRequest, "Could not parse host as URL")
 			return
 		}
-		path := parsedURL.Path
-		if !strings.HasPrefix(path, "/") {
-			path = "/" + path
-		}
-		requestLogger = requestLogger.WithField("path", path)
+		completeURL.Path = path
 
 		var accessGranted = false
 		var user *models.User
+		var completeURLString = completeURL.String()
 
 		if cookie, err := c.Request.Cookie("tac_token"); err == nil {
 			requestLogger.WithField("cookie_value", cookie.Value).Info("Cookie request")
@@ -101,9 +95,9 @@ func (s *Server) accessHandler() gin.HandlerFunc {
 		if accessGranted {
 			c.Status(http.StatusOK)
 		} else if isBrowser && user == nil {
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", &rawURL, nil))
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", &completeURLString, nil))
 		} else if isBrowser && user != nil {
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/forbidden", &rawURL, nil))
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/forbidden", &completeURLString, nil))
 		} else {
 			c.String(http.StatusUnauthorized, "No access granted")
 		}
