@@ -30,6 +30,8 @@ func NewServer() *Server {
 func (s *Server) parseTemplates() {
 	r := multitemplate.NewRenderer()
 	r.AddFromFiles("login", "templates/base.html", "templates/login.html")
+	r.AddFromFiles("dashboard", "templates/base.html", "templates/dashboard.html")
+	r.AddFromFiles("forbidden", "templates/base.html", "templates/forbidden.html")
 	s.Router.HTMLRender = r
 }
 
@@ -117,7 +119,7 @@ func (s *Server) getRedirectURL(reqURL url.URL, path, origURL string) string {
 
 func (s *Server) dashboardHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.String(http.StatusOK, "Dashboard")
+		c.HTML(http.StatusOK, "dashboard", nil)
 	}
 }
 
@@ -129,6 +131,6 @@ func (s *Server) loginHandler() gin.HandlerFunc {
 
 func (s *Server) forbiddenHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.String(http.StatusForbidden, "Access forbidden")
+		c.HTML(http.StatusForbidden, "forbidden", nil)
 	}
 }
