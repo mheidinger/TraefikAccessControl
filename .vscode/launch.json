@@ -11,7 +11,8 @@
 			"mode": "auto",
 			"program": "${workspaceFolder}/cmd/TraefikAccessControl",
 			"env": {},
-			"args": [ "-import_name", "../../tac_data.json", "-force_import" ]
+			"args": [ "-import_name", "tac_data.json", "-force_import" ],
+			"cwd": "${workspaceFolder}"
 		}
 	]
 }

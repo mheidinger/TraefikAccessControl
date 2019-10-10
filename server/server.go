@@ -7,47 +7,60 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/gin-contrib/multitemplate"
 	log "github.com/sirupsen/logrus"
+	ginlogrus "github.com/toorop/gin-logrus"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
-	Router *httprouter.Router
+	Router *gin.Engine
 }
 
 func NewServer() *Server {
-	s := &Server{}
+	s := &Server{
+		Router: gin.Default(),
+	}
+	s.parseTemplates()
 	s.buildRoutes()
 	return s
 }
 
+func (s *Server) parseTemplates() {
+	r := multitemplate.NewRenderer()
+	r.AddFromFiles("login", "templates/base.html", "templates/login.html")
+	s.Router.HTMLRender = r
+}
+
 func (s *Server) buildRoutes() {
-	s.Router = httprouter.New()
+	ginLogger := log.New()
+	s.Router.Use(ginlogrus.Logger(ginLogger), gin.Recovery())
 
 	s.Router.GET("/access", s.accessHandler())
 
+	s.Router.Static("/static", "static")
 	s.Router.GET("/", s.dashboardHandler())
 	s.Router.GET("/login", s.loginHandler())
 	s.Router.GET("/forbidden", s.forbiddenHandler())
 }
 
-func (s *Server) accessHandler() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		host := r.Header.Get("X-Forwarded-Host")
-		rawURL := r.Header.Get("X-Forwarded-Uri")
+func (s *Server) accessHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		host := c.Request.Header.Get("X-Forwarded-Host")
+		rawURL := c.Request.Header.Get("X-Forwarded-Uri")
 		requestLogger := log.WithFields(log.Fields{"host": host, "rawURL": rawURL})
 
 		if host == "" || rawURL == "" {
 			requestLogger.Info("Not all needed headers present")
-			http.Error(w, "Not all needed headers present", http.StatusBadRequest)
+			c.String(http.StatusBadRequest, "Not all needed headers present")
 			return
 		}
 
 		parsedURL, err := url.Parse(rawURL)
 		if err != nil {
 			requestLogger.Error("Failed to parse URL")
-			http.Error(w, "Faild to parse URL", http.StatusBadRequest)
+			c.String(http.StatusBadRequest, "Faild to parse URL")
 			return
 		}
 		path := parsedURL.Path
@@ -59,15 +72,15 @@ func (s *Server) accessHandler() httprouter.Handle {
 		var accessGranted = false
 		var user *models.User
 
-		if cookie, err := r.Cookie("tac_token"); err == nil {
+		if cookie, err := c.Request.Cookie("tac_token"); err == nil {
 			requestLogger.WithField("cookie_value", cookie.Value).Info("Cookie request")
 
 			accessGranted, user, err = manager.GetAccessManager().CheckAccessToken(host, path, cookie.Value, false, requestLogger)
-		} else if username, password, hasAuth := r.BasicAuth(); hasAuth {
+		} else if username, password, hasAuth := c.Request.BasicAuth(); hasAuth {
 			requestLogger.WithField("username", username).Info("BasicAuth request")
 
 			accessGranted, user, err = manager.GetAccessManager().CheckAccessCredentials(host, path, username, password, true, requestLogger)
-		} else if bearer := r.Header.Get("Authorization"); bearer != "" {
+		} else if bearer := c.Request.Header.Get("Authorization"); bearer != "" {
 			requestLogger.WithField("bearer", bearer).Info("Bearer request")
 
 			bearerParts := strings.Split(bearer, "Bearer")
@@ -79,38 +92,43 @@ func (s *Server) accessHandler() httprouter.Handle {
 			requestLogger.Info("No auth information in request")
 		}
 
-		isBrowser := strings.Contains(r.UserAgent(), "Mozilla")
+		isBrowser := strings.Contains(c.Request.UserAgent(), "Mozilla")
 		if accessGranted {
-			w.WriteHeader(http.StatusOK)
+			c.Status(http.StatusOK)
 		} else if isBrowser && user == nil {
-			redirectURL := r.URL
-			redirectURL.Path = "/login"
-			q := url.Values{}
-			q.Set("orig_url", rawURL)
-			redirectURL.RawQuery = q.Encode()
-			http.Redirect(w, r, redirectURL.String(), http.StatusTemporaryRedirect)
+			c.Redirect(http.StatusTemporaryRedirect, s.getRedirectURL(*c.Request.URL, "/login", rawURL))
 		} else if isBrowser && user != nil {
-			http.Error(w, "HTML No access", http.StatusUnauthorized)
+			c.Redirect(http.StatusTemporaryRedirect, s.getRedirectURL(*c.Request.URL, "/forbidden", rawURL))
 		} else {
-			http.Error(w, "No access granted", http.StatusUnauthorized)
+			c.String(http.StatusUnauthorized, "No access granted")
 		}
 	}
 }
 
-func (s *Server) dashboardHandler() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		http.Error(w, "Dashboard!", 200)
+func (s *Server) getRedirectURL(reqURL url.URL, path, origURL string) string {
+	redirectURL := reqURL
+	redirectURL.Path = path
+	q := url.Values{}
+	q.Set("orig_url", origURL)
+	redirectURL.RawQuery = q.Encode()
+
+	return redirectURL.String()
+}
+
+func (s *Server) dashboardHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.String(http.StatusOK, "Dashboard")
 	}
 }
 
-func (s *Server) loginHandler() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		http.Error(w, "Login!", 200)
+func (s *Server) loginHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.HTML(http.StatusOK, "login", nil)
 	}
 }
 
-func (s *Server) forbiddenHandler() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		http.Error(w, "Access forbidden...", 200)
+func (s *Server) forbiddenHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.String(http.StatusForbidden, "Access forbidden")
 	}
 }

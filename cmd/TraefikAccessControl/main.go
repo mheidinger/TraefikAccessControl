@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"net/http"
 
 	"TraefikAccessControl/manager"
 	"TraefikAccessControl/repository"
@@ -54,6 +53,6 @@ func main() {
 	srv := server.NewServer()
 
 	// Start
-	log.Info("Listening on :4181")
-	log.Info(http.ListenAndServe(":4181", srv.Router))
+	log.WithField("port", 4181).Info("Listening on specified port")
+	log.Info(srv.Router.Run(":4181"))
 }

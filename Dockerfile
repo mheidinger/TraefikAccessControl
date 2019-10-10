@@ -13,5 +13,7 @@ FROM alpine:3.10
 WORKDIR /app
 COPY --from=builder /build/TraefikAccessControl .
 
+ENV GIN_MODE release
+
 EXPOSE 4181
 CMD ["./TraefikAccessControl"]
