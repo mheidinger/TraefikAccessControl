@@ -1,7 +1,36 @@
 {{define "title"}}Dashboard{{end}}
 
 {{define "body"}}
-<div class="container">
+<div>
 	<h1 class="header center orange-text">Dashboard</h1>
+
+	<div class="container">
+		<h4 class="orange-text">Your available sites:</h4>
+		<table class="responsive-table striped">
+			<thead>
+				<tr>
+					<th>Host</th>
+					<th>Path-Prefix</th>
+					<th>BasicAuth Allowed</th>
+				</tr>
+			</thead>
+			<tbody>
+				{{range .siteMappings}}
+					<tr>
+						<td>{{.Site.Host}}</td>
+						<td>{{.Site.PathPrefix}}</td>
+						<td>
+							{{if .SiteMapping.BasicAuthAllowed}}
+								<i class="material-icons prefix">done</i>
+							{{else}}
+								<i class="material-icons prefix">clear</i>
+							{{end}}
+						</td>
+					</tr>
+				{{end}}
+			</tbody>
+		</table>
+		
+	</div>
 </div>
 {{end}}

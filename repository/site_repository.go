@@ -28,6 +28,12 @@ func (rep *SiteRepository) GetByHost(host string) (sites []*models.Site, err err
 	return
 }
 
+func (rep *SiteRepository) GetByID(siteID int) (site *models.Site, err error) {
+	site = &models.Site{}
+	err = databaseConnection.First(site, &models.Site{ID: siteID}).Error
+	return
+}
+
 func (rep *SiteRepository) Clear() (err error) {
 	err = databaseConnection.Delete(&models.Site{}).Error
 	return

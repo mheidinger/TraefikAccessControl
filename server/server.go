@@ -19,6 +19,7 @@ import (
 const (
 	errorParam       = "error"
 	redirectURLParam = "redirect_url"
+	userContextKey   = "user"
 )
 
 type Server struct {
@@ -51,10 +52,10 @@ func (s *Server) buildRoutes() {
 	s.Router.GET("/access", s.accessHandler())
 
 	s.Router.Static("/static", "./static")
-	s.Router.GET("/", s.dashboardUIHandler())
-	s.Router.GET("/login", s.loginUIHandler())
+	s.Router.GET("/", s.fillUserFromCookie(), s.userMustBeValid(), s.dashboardUIHandler())
+	s.Router.GET("/login", s.fillUserFromCookie(), s.loginUIHandler())
 	s.Router.POST("/login", s.loginHandler())
-	s.Router.GET("/forbidden", s.forbiddenUIHandler())
+	s.Router.GET("/forbidden", s.fillUserFromCookie(), s.forbiddenUIHandler())
 }
 
 func (s *Server) accessHandler() gin.HandlerFunc {
@@ -127,6 +128,36 @@ func (s *Server) getRedirectURL(reqURL url.URL, path string, origURL, errVal *st
 	return redirectURL.String()
 }
 
+func (s *Server) fillUserFromCookie() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		cookie, err := c.Request.Cookie(s.cookieName)
+		if err != nil {
+			c.Set(userContextKey, nil)
+			c.Next()
+			return
+		}
+		user, err := manager.GetAuthManager().ValidateTokenString(cookie.Value, false)
+		if err != nil {
+			c.Set(userContextKey, nil)
+			c.Next()
+			return
+		}
+
+		c.Set(userContextKey, user)
+		c.Next()
+	}
+}
+
+func (s *Server) userMustBeValid() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if user, ok := c.Get(userContextKey); ok == false || user == nil {
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, nil))
+			return
+		}
+		c.Next()
+	}
+}
+
 func (s *Server) loginHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		username := c.PostForm("username")
@@ -164,12 +195,45 @@ func (s *Server) loginHandler() gin.HandlerFunc {
 
 func (s *Server) dashboardUIHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.HTML(http.StatusOK, "dashboard", nil)
+		userInt, _ := c.Get(userContextKey)
+		user, ok := userInt.(*models.User)
+		if !ok {
+			c.HTML(http.StatusInternalServerError, "dashboard", gin.H{"error": "server"})
+			return
+		}
+
+		rawSiteMappings, err := manager.GetSiteManager().GetSiteMappingsByUser(user)
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "dashboard", gin.H{"error": "server"})
+			return
+		}
+
+		siteMappings := make([]struct {
+			SiteMapping *models.SiteMapping
+			Site        *models.Site
+		}, len(rawSiteMappings))
+
+		for it, rawSiteMapping := range rawSiteMappings {
+			site, err := manager.GetSiteManager().GetSiteByID(rawSiteMapping.SiteID)
+			if err != nil {
+				continue
+			}
+			siteMappings[it].SiteMapping = rawSiteMapping
+			siteMappings[it].Site = site
+		}
+
+		c.HTML(http.StatusOK, "dashboard", gin.H{
+			"siteMappings": siteMappings,
+		})
 	}
 }
 
 func (s *Server) loginUIHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if user, ok := c.Get(userContextKey); ok == true && user != nil {
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, nil))
+			return
+		}
 
 		c.HTML(http.StatusOK, "login", gin.H{
 			"error": c.Query(errorParam),
@@ -182,3 +246,4 @@ func (s *Server) forbiddenUIHandler() gin.HandlerFunc {
 		c.HTML(http.StatusForbidden, "forbidden", nil)
 	}
 }
+div class="col s2"

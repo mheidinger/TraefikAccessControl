@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"strconv"
 
 	"TraefikAccessControl/manager"
 	"TraefikAccessControl/repository"
@@ -15,6 +16,7 @@ func main() {
 	importNamePtr := flag.String("import_name", "", "Path of an file to import")
 	forceImportPtr := flag.Bool("force_import", false, "Force the import of the given file, deletes all existing data")
 	cookieNamePtr := flag.String("cookie_name", "tac_token", "Cookie name used")
+	portPtr := flag.Int("port", 4181, "Port on which the application will run")
 	flag.Parse()
 
 	err := repository.InitDatabaseConnection(*dbNamePtr)
@@ -54,6 +56,6 @@ func main() {
 	srv := server.NewServer(*cookieNamePtr)
 
 	// Start
-	log.WithField("port", 4181).Info("Listening on specified port")
-	log.Info(srv.Router.Run(":4181"))
+	log.WithField("port", *portPtr).Info("Listening on specified port")
+	log.Info(srv.Router.Run(":" + strconv.Itoa(*portPtr)))
 }

@@ -77,6 +77,10 @@ func (mgr *SiteManager) GetSite(host, path string) (site *models.Site, err error
 	return
 }
 
+func (mgr *SiteManager) GetSiteByID(siteID int) (site *models.Site, err error) {
+	return mgr.siteRep.GetByID(siteID)
+}
+
 func (mgr *SiteManager) CreateSiteMapping(siteMapping *models.SiteMapping) (err error) {
 	createLog := log.WithFields(log.Fields{"userID": siteMapping.UserID, "siteID": siteMapping.SiteID, "BasicAuthAllowed": siteMapping.BasicAuthAllowed})
 
@@ -100,6 +104,10 @@ func (mgr *SiteManager) GetSiteMapping(user *models.User, site *models.Site) (si
 		return nil, fmt.Errorf("Failed to get site mapping")
 	}
 	return
+}
+
+func (mgr *SiteManager) GetSiteMappingsByUser(user *models.User) (siteMappings []*models.SiteMapping, err error) {
+	return mgr.siteMappingRep.GetByUser(user.ID)
 }
 
 func (mgr *SiteManager) ClearAll() (err error) {
