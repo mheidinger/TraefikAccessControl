@@ -29,6 +29,11 @@ func (rep *TokenRepository) GetByTokenString(tokenString string) (token *models.
 	return
 }
 
+func (rep *TokenRepository) DeleteByTokenString(tokenString string) (err error) {
+	err = databaseConnection.Delete(&models.Token{Token: tokenString}).Error
+	return
+}
+
 func (rep *TokenRepository) Clear() (err error) {
 	err = databaseConnection.Delete(&models.Token{}).Error
 	return

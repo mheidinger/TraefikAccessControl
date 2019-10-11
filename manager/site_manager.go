@@ -81,6 +81,10 @@ func (mgr *SiteManager) GetSiteByID(siteID int) (site *models.Site, err error) {
 	return mgr.siteRep.GetByID(siteID)
 }
 
+func (mgr *SiteManager) GetAllSites() (sites []*models.Site, err error) {
+	return mgr.siteRep.GetAll()
+}
+
 func (mgr *SiteManager) CreateSiteMapping(siteMapping *models.SiteMapping) (err error) {
 	createLog := log.WithFields(log.Fields{"userID": siteMapping.UserID, "siteID": siteMapping.SiteID, "BasicAuthAllowed": siteMapping.BasicAuthAllowed})
 

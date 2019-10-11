@@ -55,6 +55,7 @@ func (s *Server) buildRoutes() {
 	s.Router.GET("/", s.fillUserFromCookie(), s.userMustBeValid(), s.dashboardUIHandler())
 	s.Router.GET("/login", s.fillUserFromCookie(), s.loginUIHandler())
 	s.Router.POST("/login", s.loginHandler())
+	s.Router.GET("/logout", s.logoutHandler())
 	s.Router.GET("/forbidden", s.fillUserFromCookie(), s.forbiddenUIHandler())
 }
 
@@ -193,6 +194,17 @@ func (s *Server) loginHandler() gin.HandlerFunc {
 	}
 }
 
+func (s *Server) logoutHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		cookie, err := c.Request.Cookie(s.cookieName)
+		if err == nil {
+			manager.GetAuthManager().DeleteToken(cookie.Value)
+		}
+		c.SetCookie(s.cookieName, "", -1, "", "", false, true)
+		c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, nil))
+	}
+}
+
 func (s *Server) dashboardUIHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userInt, _ := c.Get(userContextKey)
@@ -222,8 +234,23 @@ func (s *Server) dashboardUIHandler() gin.HandlerFunc {
 			siteMappings[it].Site = site
 		}
 
+		users, err := manager.GetAuthManager().GetAllUsers()
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "dashboard", gin.H{"error": "server"})
+			return
+		}
+
+		sites, err := manager.GetSiteManager().GetAllSites()
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "dashboard", gin.H{"error": "server"})
+			return
+		}
+
 		c.HTML(http.StatusOK, "dashboard", gin.H{
+			"user":         user,
 			"siteMappings": siteMappings,
+			"users":        users,
+			"sites":        sites,
 		})
 	}
 }
@@ -246,4 +273,3 @@ func (s *Server) forbiddenUIHandler() gin.HandlerFunc {
 		c.HTML(http.StatusForbidden, "forbidden", nil)
 	}
 }
-div class="col s2"

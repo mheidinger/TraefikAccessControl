@@ -149,6 +149,14 @@ func (mgr *AuthManager) ValidateCredentials(username, password string) (user *mo
 	return
 }
 
+func (mgr *AuthManager) DeleteToken(tokenString string) (err error) {
+	return mgr.tokenRep.DeleteByTokenString(tokenString)
+}
+
+func (mgr *AuthManager) GetAllUsers() (users []*models.User, err error) {
+	return mgr.userRep.GetAll()
+}
+
 func (mgr *AuthManager) ClearAll() (err error) {
 	err = mgr.userRep.Clear()
 	if err != nil {

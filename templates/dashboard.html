@@ -21,16 +21,71 @@
 						<td>{{.Site.PathPrefix}}</td>
 						<td>
 							{{if .SiteMapping.BasicAuthAllowed}}
-								<i class="material-icons prefix">done</i>
+								<i class="material-icons">done</i>
 							{{else}}
-								<i class="material-icons prefix">clear</i>
+								<i class="material-icons">clear</i>
 							{{end}}
 						</td>
 					</tr>
 				{{end}}
 			</tbody>
 		</table>
-		
 	</div>
+
+	{{if .user.IsAdmin}}
+		<h2 class="center orange-text">Admin Area</h2>
+
+		<div class="container">
+			<h4 class="orange-text">All users:</h4>
+			<table class="responsive-table striped">
+				<thead>
+					<tr>
+						<th>Username</th>
+						<th>Is Admin</th>
+						<th>Delete</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{range .users}}
+						<tr>
+							<td>{{.Username}}</td>
+							<td>
+								{{if .IsAdmin}}
+									<i class="material-icons">done</i>
+								{{else}}
+									<i class="material-icons">clear</i>
+								{{end}}
+							</td>
+							<td><a href="#delete"><i class="material-icons">delete_forever</i></a></td>
+						</tr>
+					{{end}}
+				</tbody>
+			</table>
+		</div>
+
+		<div class="container">
+			<h4 class="orange-text">All sites:</h4>
+			<table class="responsive-table striped">
+				<thead>
+					<tr>
+						<th>Host</th>
+						<th>Path-Prefix</th>
+						<th>Change</th>
+						<th>Delete</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{range .sites}}
+						<tr>
+							<td>{{.Host}}</td>
+							<td>{{.PathPrefix}}</td>
+							<td><a href="#edit"><i class="material-icons">edit</i></a></td>
+							<td><a href="#delete"><i class="material-icons">delete_forever</i></a></td>
+						</tr>
+					{{end}}
+				</tbody>
+			</table>
+		</div>
+	{{end}}
 </div>
 {{end}}

@@ -34,6 +34,11 @@ func (rep *SiteRepository) GetByID(siteID int) (site *models.Site, err error) {
 	return
 }
 
+func (rep *SiteRepository) GetAll() (sites []*models.Site, err error) {
+	err = databaseConnection.Find(&sites).Error
+	return
+}
+
 func (rep *SiteRepository) Clear() (err error) {
 	err = databaseConnection.Delete(&models.Site{}).Error
 	return

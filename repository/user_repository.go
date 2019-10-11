@@ -35,6 +35,11 @@ func (rep *UserRepository) GetByUsername(username string) (user *models.User, er
 	return
 }
 
+func (rep *UserRepository) GetAll() (users []*models.User, err error) {
+	err = databaseConnection.Find(&users).Error
+	return
+}
+
 func (rep *UserRepository) Update(user *models.User) (err error) {
 	err = databaseConnection.Save(user).Error
 	return
