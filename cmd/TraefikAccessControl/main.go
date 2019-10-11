@@ -14,6 +14,7 @@ func main() {
 	dbNamePtr := flag.String("db_name", "tac.db", "Path of the database file")
 	importNamePtr := flag.String("import_name", "", "Path of an file to import")
 	forceImportPtr := flag.Bool("force_import", false, "Force the import of the given file, deletes all existing data")
+	cookieNamePtr := flag.String("cookie_name", "tac_token", "Cookie name used")
 	flag.Parse()
 
 	err := repository.InitDatabaseConnection(*dbNamePtr)
@@ -50,7 +51,7 @@ func main() {
 		}
 	}
 
-	srv := server.NewServer()
+	srv := server.NewServer(*cookieNamePtr)
 
 	// Start
 	log.WithField("port", 4181).Info("Listening on specified port")

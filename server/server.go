@@ -16,13 +16,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	errorParam       = "error"
+	redirectURLParam = "redirect_url"
+)
+
 type Server struct {
-	Router *gin.Engine
+	Router     *gin.Engine
+	cookieName string
 }
 
-func NewServer() *Server {
+func NewServer(cookieName string) *Server {
 	s := &Server{
-		Router: gin.Default(),
+		Router:     gin.Default(),
+		cookieName: cookieName,
 	}
 	s.parseTemplates()
 	s.buildRoutes()
@@ -43,7 +50,7 @@ func (s *Server) buildRoutes() {
 
 	s.Router.GET("/access", s.accessHandler())
 
-	s.Router.Static("/static", "static")
+	s.Router.Static("/static", "./static")
 	s.Router.GET("/", s.dashboardUIHandler())
 	s.Router.GET("/login", s.loginUIHandler())
 	s.Router.POST("/login", s.loginHandler())
@@ -54,25 +61,26 @@ func (s *Server) accessHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		host := c.Request.Header.Get("X-Forwarded-Host")
 		path := c.Request.Header.Get("X-Forwarded-Uri")
-		requestLogger := log.WithFields(log.Fields{"host": host, "path": path})
+		proto := c.Request.Header.Get("X-Forwarded-Proto")
+		requestLogger := log.WithFields(log.Fields{"host": host, "path": path, "proto": proto})
 
-		if host == "" || path == "" {
+		if host == "" || path == "" || proto == "" {
 			c.String(http.StatusBadRequest, "Not all needed headers present")
 			return
 		}
-		completeURL, err := url.Parse(host)
+		completeURL, err := url.Parse(host + path)
 		if err != nil {
 			c.String(http.StatusBadRequest, "Could not parse host as URL")
 			return
 		}
-		completeURL.Path = path
+		completeURL.Scheme = proto
 
 		var accessGranted = false
 		var user *models.User
 		var completeURLString = completeURL.String()
 
-		if cookie, err := c.Request.Cookie("tac_token"); err == nil {
-			requestLogger.WithField("cookie_value", cookie.Value).Info("Cookie request")
+		if cookie, err := c.Request.Cookie(s.cookieName); err == nil {
+			requestLogger.Info("Cookie request")
 
 			accessGranted, user, err = manager.GetAccessManager().CheckAccessToken(host, path, cookie.Value, false, requestLogger)
 		} else if username, password, hasAuth := c.Request.BasicAuth(); hasAuth {
@@ -80,7 +88,7 @@ func (s *Server) accessHandler() gin.HandlerFunc {
 
 			accessGranted, user, err = manager.GetAccessManager().CheckAccessCredentials(host, path, username, password, true, requestLogger)
 		} else if bearer := c.Request.Header.Get("Authorization"); bearer != "" {
-			requestLogger.WithField("bearer", bearer).Info("Bearer request")
+			requestLogger.Info("Bearer request")
 
 			bearerParts := strings.Split(bearer, "Bearer")
 			if len(bearerParts) == 2 {
@@ -107,12 +115,12 @@ func (s *Server) accessHandler() gin.HandlerFunc {
 func (s *Server) getRedirectURL(reqURL url.URL, path string, origURL, errVal *string) string {
 	redirectURL := reqURL
 	redirectURL.Path = path
-	q := url.Values{}
+	q := redirectURL.Query()
 	if origURL != nil {
-		q.Set("orig_url", *origURL)
+		q.Set(redirectURLParam, *origURL)
 	}
 	if errVal != nil {
-		q.Set("error", *errVal)
+		q.Set(errorParam, *errVal)
 	}
 	redirectURL.RawQuery = q.Encode()
 
@@ -121,8 +129,6 @@ func (s *Server) getRedirectURL(reqURL url.URL, path string, origURL, errVal *st
 
 func (s *Server) loginHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		log.WithField("postform", c.Request.PostForm).Info("Post form")
-
 		username := c.PostForm("username")
 		password := c.PostForm("password")
 
@@ -145,9 +151,14 @@ func (s *Server) loginHandler() gin.HandlerFunc {
 			log.WithFields(log.Fields{"host": c.Request.Host, "err": err}).Error("Could not determine domain, use host instead")
 			host = c.Request.Host
 		}
-		c.SetCookie("tac_token", token.Token, maxAge, "", host, false, true)
+		c.SetCookie(s.cookieName, token.Token, maxAge, "", host, false, true)
 
-		c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, nil))
+		redirect := c.Query(redirectURLParam)
+		if redirect != "" {
+			c.Redirect(http.StatusFound, redirect)
+		} else {
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, nil))
+		}
 	}
 }
 
@@ -161,7 +172,7 @@ func (s *Server) loginUIHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		c.HTML(http.StatusOK, "login", gin.H{
-			"error": c.Query("error"),
+			"error": c.Query(errorParam),
 		})
 	}
 }
