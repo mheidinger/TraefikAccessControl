@@ -44,31 +44,31 @@ func (mgr *AuthManager) Close() {
 	mgr.done <- struct{}{}
 }
 
-func (mgr *AuthManager) CreateUser(user *models.User) (*models.Token, error) {
+func (mgr *AuthManager) CreateUser(user *models.User) (err error) {
 	createLog := log.WithFields(log.Fields{"username": user.Username})
 
 	if user.Username == "" || user.Password == "" || user.ID != 0 {
-		return nil, fmt.Errorf("User not valid")
+		return fmt.Errorf("User not valid")
 	}
 
 	existingUser, err := mgr.userRep.GetByUsername(user.Username)
 	if err != nil && !repository.IsRecordNotFoundError(err) {
 		createLog.WithField("err", err).Warn("Could not validate whether user already exists")
 	} else if err == nil && existingUser != nil && existingUser.ID > 0 {
-		return nil, fmt.Errorf("User already exists")
+		return fmt.Errorf("User already exists")
 	}
 
 	user.Password, err = crypt.HashScrypt(user.Password)
 	if err != nil {
 		createLog.WithField("err", err).Error("Password hashing failed")
-		return nil, fmt.Errorf("Password Hashing failed")
+		return fmt.Errorf("Password Hashing failed")
 	}
 	user.IsAdmin = false
 
 	err = mgr.userRep.Create(user)
 	if err != nil {
 		createLog.WithField("err", err).Error("Failed to save new user")
-		return nil, fmt.Errorf("Saving user failed")
+		return fmt.Errorf("Saving user failed")
 	}
 
 	if count, err := mgr.GetUserCount(); err == nil && count == 1 {
@@ -80,19 +80,19 @@ func (mgr *AuthManager) CreateUser(user *models.User) (*models.Token, error) {
 		}
 	}
 
-	return mgr.CreateUserToken(user.ID, false)
+	return
 }
 
-func (mgr *AuthManager) CreateUserToken(userID int, isBearer bool) (token *models.Token, err error) {
-	createLogger := log.WithFields(log.Fields{"userID": userID, "isBearer": isBearer})
+func (mgr *AuthManager) CreateUserToken(userID int, name *string) (token *models.Token, err error) {
+	createLogger := log.WithFields(log.Fields{"userID": userID, "name": name})
 
 	token = &models.Token{
-		UserID:   userID,
-		Token:    utils.RandomString(mgr.tokenLength),
-		IsBearer: isBearer,
+		UserID: userID,
+		Token:  utils.RandomString(mgr.tokenLength),
+		Name:   name,
 	}
 
-	if !isBearer {
+	if name == nil {
 		token.ExpiresAt = time.Now().UTC().Add(time.Hour * time.Duration(mgr.tokenExpiry))
 	}
 
@@ -105,6 +105,10 @@ func (mgr *AuthManager) CreateUserToken(userID int, isBearer bool) (token *model
 	return
 }
 
+func (mgr *AuthManager) GetBearerTokens(user *models.User) (tokens []*models.Token, err error) {
+	return mgr.tokenRep.GetBearerByUser(user.ID)
+}
+
 func (mgr *AuthManager) ValidateTokenString(tokenString string, fromBearer bool) (user *models.User, err error) {
 	token, err := mgr.tokenRep.GetByTokenString(tokenString)
 	if err != nil && !repository.IsRecordNotFoundError(err) {
@@ -114,12 +118,12 @@ func (mgr *AuthManager) ValidateTokenString(tokenString string, fromBearer bool)
 		return nil, fmt.Errorf("Token not found")
 	}
 
-	if time.Now().After(token.ExpiresAt) {
+	if !token.IsBearer() && time.Now().After(token.ExpiresAt) {
 		return nil, fmt.Errorf("Token expired")
 	}
 
-	if token.IsBearer != fromBearer {
-		return nil, fmt.Errorf("Bearer status of token does not math auth method")
+	if token.IsBearer() != fromBearer {
+		return nil, fmt.Errorf("Bearer status of token does not match auth method")
 	}
 
 	user, err = mgr.userRep.GetByID(token.UserID)

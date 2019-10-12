@@ -170,7 +170,7 @@ func (s *Server) loginHandler() gin.HandlerFunc {
 			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, &errVal))
 			return
 		}
-		token, err := manager.GetAuthManager().CreateUserToken(user.ID, false)
+		token, err := manager.GetAuthManager().CreateUserToken(user.ID, nil)
 		if err != nil {
 			errVal := "server"
 			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, &errVal))
@@ -234,6 +234,11 @@ func (s *Server) dashboardUIHandler() gin.HandlerFunc {
 			siteMappings[it].Site = site
 		}
 
+		tokens, err := manager.GetAuthManager().GetBearerTokens(user)
+		for _, token := range tokens {
+			token.Token = token.Token[0:4] + strings.Repeat("X", len(token.Token)-4)
+		}
+
 		users, err := manager.GetAuthManager().GetAllUsers()
 		if err != nil {
 			c.HTML(http.StatusInternalServerError, "dashboard", gin.H{"error": "server"})
@@ -249,6 +254,7 @@ func (s *Server) dashboardUIHandler() gin.HandlerFunc {
 		c.HTML(http.StatusOK, "dashboard", gin.H{
 			"user":         user,
 			"siteMappings": siteMappings,
+			"tokens":       tokens,
 			"users":        users,
 			"sites":        sites,
 		})

@@ -59,8 +59,8 @@ func (mgr *ImportExportManager) ImportFile(filePath string, force bool) (err err
 		importID := user.ID
 		user.ID = 0
 
-		token, err := GetAuthManager().CreateUser(user)
-		log.WithFields(log.Fields{"token": token.Token, "username": user.Username}).Info("User token")
+		err := GetAuthManager().CreateUser(user)
+		log.WithField("username", user.Username).Info("User token")
 		if err != nil {
 			importLog.Warn("Failed to create user from import")
 			continue

@@ -24,7 +24,7 @@ func (rep *SiteRepository) Create(site *models.Site) (err error) {
 }
 
 func (rep *SiteRepository) GetByHost(host string) (sites []*models.Site, err error) {
-	err = databaseConnection.Where(&models.Site{Host: host}).Find(&sites).Error
+	err = databaseConnection.Where(&models.Site{Host: host}).Order("path_prefix").Find(&sites).Error
 	return
 }
 
@@ -35,7 +35,7 @@ func (rep *SiteRepository) GetByID(siteID int) (site *models.Site, err error) {
 }
 
 func (rep *SiteRepository) GetAll() (sites []*models.Site, err error) {
-	err = databaseConnection.Find(&sites).Error
+	err = databaseConnection.Order("host, path_prefix").Find(&sites).Error
 	return
 }
 

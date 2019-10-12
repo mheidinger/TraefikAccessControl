@@ -36,7 +36,7 @@ func (rep *UserRepository) GetByUsername(username string) (user *models.User, er
 }
 
 func (rep *UserRepository) GetAll() (users []*models.User, err error) {
-	err = databaseConnection.Find(&users).Error
+	err = databaseConnection.Order("username").Find(&users).Error
 	return
 }
 

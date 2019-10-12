@@ -29,6 +29,11 @@ func (rep *TokenRepository) GetByTokenString(tokenString string) (token *models.
 	return
 }
 
+func (rep *TokenRepository) GetBearerByUser(userID int) (tokens []*models.Token, err error) {
+	err = databaseConnection.Where("user_id = ? AND name NOT NULL", userID).Order("name").Find(&tokens).Error
+	return
+}
+
 func (rep *TokenRepository) DeleteByTokenString(tokenString string) (err error) {
 	err = databaseConnection.Delete(&models.Token{Token: tokenString}).Error
 	return
