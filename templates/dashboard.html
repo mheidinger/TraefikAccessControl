@@ -54,7 +54,7 @@
 					<td><input type="text" id="bearerNameField" placeholder="Name"></td>
 					<td></td>
 					<td>
-						<button class="btn waves-effect waves-light right" id="bearerCreateBtn">
+						<button class="btn waves-effect waves-light right" id="bearerCreateButton">
 							Create New
 							<i class="material-icons right">create</i>
 						</button>
@@ -101,7 +101,7 @@
 						<td><input type="text" id="userNameField" placeholder="Username"><input type="password" id="userPasswordField" placeholder="Password"></td>
 						<td class="right-align"><label><input type="checkbox" class="filled-in" id="userAdminField"/><span></span></label></td>
 						<td>
-							<button class="btn waves-effect waves-light right" id="userCreateBtn">
+							<button class="btn waves-effect waves-light right" id="userCreateButton">
 								Create New
 								<i class="material-icons right">create</i>
 							</button>
@@ -128,7 +128,7 @@
 							<td>{{.Host}}</td>
 							<td>{{.PathPrefix}}</td>
 							<td class="right-align"><a href="#edit"><i class="material-icons">edit</i></a></td>
-							<td class="right-align"><a href="#delete"><i class="material-icons">delete_forever</i></a></td>
+							<td class="right-align"><a class="siteDeleteButton" href="#"><i data-siteid={{.ID}} class="material-icons">delete_forever</i></a></td>
 						</tr>
 					{{end}}
 					<tr>
@@ -136,7 +136,7 @@
 						<td><input type="text" id="sitePathPrefixField" placeholder="Path-Prefix"></td>
 						<td></td>
 						<td>
-							<button class="btn waves-effect waves-light right" id="userCreateBtn">
+							<button class="btn waves-effect waves-light right" id="siteCreateButton">
 								Create New
 								<i class="material-icons right">create</i>
 							</button>

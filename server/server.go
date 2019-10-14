@@ -263,6 +263,7 @@ func (s *Server) dashboardUIHandler() gin.HandlerFunc {
 		}
 
 		c.HTML(http.StatusOK, "dashboard", gin.H{
+			"error":        c.Query(errorParam),
 			"user":         user,
 			"siteMappings": siteMappings,
 			"tokens":       tokens,
@@ -287,7 +288,9 @@ func (s *Server) loginUIHandler() gin.HandlerFunc {
 
 func (s *Server) forbiddenUIHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.HTML(http.StatusForbidden, "forbidden", nil)
+		c.HTML(http.StatusForbidden, "forbidden", gin.H{
+			"error": c.Query(errorParam),
+		})
 	}
 }
 

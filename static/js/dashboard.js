@@ -25,7 +25,7 @@
     }).then(() => location.reload())
 	}
 
-	const createBearerButton = document.getElementById("bearerCreateBtn");
+	const createBearerButton = document.getElementById("bearerCreateButton");
 	createBearerButton.onclick = onCreateBearer;
 
 	const deleteBearerButtons = document.getElementsByClassName("bearerDeleteButton");

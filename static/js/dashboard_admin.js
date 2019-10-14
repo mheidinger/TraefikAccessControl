@@ -27,11 +27,29 @@
     }).then(() => location.reload())
 	}
 
-	const createUserButton = document.getElementById("userCreateBtn");
+	function onCreateSite(event) {
+		event.preventDefault();
+		//TODO
+	}
+
+	function onDeleteSite(event) {
+		event.preventDefault();
+		//TODO
+	}
+
+	const createUserButton = document.getElementById("userCreateButton");
 	createUserButton.onclick = onCreateUser;
 
 	const deleteUserButtons = document.getElementsByClassName("userDeleteButton");
 	for (const button of deleteUserButtons) {
 		button.onclick = onDeleteUser;
+	}
+	
+	const createSiteButton = document.getElementById("siteCreateButton");
+	createSiteButton.onclick = onCreateSite;
+
+	const deleteSiteButtons = document.getElementsByClassName("siteDeleteButton");
+	for (const button of deleteSiteButtons) {
+		button.onclick = onDeleteSite;
 	}
 })();
