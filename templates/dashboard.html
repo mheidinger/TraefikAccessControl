@@ -34,29 +34,37 @@
 
 	<div class="container">
 		<h4 class="orange-text">Your bearer tokens:</h4>
-		<button class="btn waves-effect waves-light right">
-			Create New
-			<i class="material-icons right">create</i>
-		</button>
 		<table class="responsive-table striped">
 			<thead>
 				<tr>
-					<th>Token</th>
 					<th>Name</th>
+					<th>Token</th>
 					<th class="right-align">Delete</th>
 				</tr>
 			</thead>
 			<tbody>
 				{{range .tokens}}
 					<tr>
-						<td>{{.Token}}</td>
 						<td>{{.Name}}</td>
-						<td class="right-align"><a href="#delete"><i class="material-icons">delete_forever</i></a></td>
+						<td>{{.Token}}</td>
+						<td class="right-align"><a class="bearerDeleteButton" href="#"><i data-tokenName="{{.Name}}" class="material-icons">delete_forever</i></a></td>
 					</tr>
 				{{end}}
+				<tr>
+					<td><input type="text" id="bearerNameField"></td>
+					<td></td>
+					<td>
+						<button class="btn waves-effect waves-light right" id="bearerCreateBtn">
+							Create New
+							<i class="material-icons right">create</i>
+						</button>
+					</td>
+				</tr>
 			</tbody>
 		</table>
 	</div>
+
+	<script src="/static/js/dashboard.js"></script>
 
 	{{if .user.IsAdmin}}
 		<h2 class="center orange-text">Admin Area</h2>

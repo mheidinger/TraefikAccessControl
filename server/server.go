@@ -29,7 +29,7 @@ type Server struct {
 
 func NewServer(cookieName string) *Server {
 	s := &Server{
-		Router:     gin.Default(),
+		Router:     gin.New(),
 		cookieName: cookieName,
 	}
 	s.parseTemplates()
@@ -46,17 +46,20 @@ func (s *Server) parseTemplates() {
 }
 
 func (s *Server) buildRoutes() {
-	ginLogger := log.New()
-	s.Router.Use(ginlogrus.Logger(ginLogger), gin.Recovery())
+	s.Router.Use(ginlogrus.Logger(log.New()), gin.Recovery())
 
 	s.Router.GET("/access", s.accessHandler())
 
 	s.Router.Static("/static", "./static")
-	s.Router.GET("/", s.fillUserFromCookie(), s.userMustBeValid(), s.dashboardUIHandler())
+	s.Router.GET("/", s.fillUserFromCookie(), s.userMustBeValid(false), s.dashboardUIHandler())
 	s.Router.GET("/login", s.fillUserFromCookie(), s.loginUIHandler())
 	s.Router.POST("/login", s.loginHandler())
 	s.Router.GET("/logout", s.logoutHandler())
 	s.Router.GET("/forbidden", s.fillUserFromCookie(), s.forbiddenUIHandler())
+
+	api := s.Router.Group("/api", s.fillUserFromCookie(), s.userMustBeValid(true))
+	api.POST("/bearer", s.createBearerAPIHandler())
+	api.DELETE("/bearer", s.deleteBearerAPIHandler())
 }
 
 func (s *Server) accessHandler() gin.HandlerFunc {
@@ -149,10 +152,14 @@ func (s *Server) fillUserFromCookie() gin.HandlerFunc {
 	}
 }
 
-func (s *Server) userMustBeValid() gin.HandlerFunc {
+func (s *Server) userMustBeValid(forAPI bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if user, ok := c.Get(userContextKey); ok == false || user == nil {
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, nil))
+			if forAPI {
+				c.String(http.StatusUnauthorized, "Not authenticated")
+			} else {
+				c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, nil))
+			}
 			return
 		}
 		c.Next()
@@ -236,7 +243,9 @@ func (s *Server) dashboardUIHandler() gin.HandlerFunc {
 
 		tokens, err := manager.GetAuthManager().GetBearerTokens(user)
 		for _, token := range tokens {
-			token.Token = token.Token[0:4] + strings.Repeat("X", len(token.Token)-4)
+			if time.Now().After(token.CreatedAt.Add(2 * time.Minute)) {
+				token.Token = token.Token[0:4] + strings.Repeat("×", len(token.Token)-4)
+			}
 		}
 
 		users, err := manager.GetAuthManager().GetAllUsers()
@@ -277,5 +286,47 @@ func (s *Server) loginUIHandler() gin.HandlerFunc {
 func (s *Server) forbiddenUIHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.HTML(http.StatusForbidden, "forbidden", nil)
+	}
+}
+
+func (s *Server) createBearerAPIHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userInt, _ := c.Get(userContextKey)
+		user := userInt.(*models.User)
+
+		var name struct{ Name string }
+		if err := c.ShouldBindJSON(&name); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		token, err := manager.GetAuthManager().CreateUserToken(user.ID, &name.Name)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, token)
+	}
+}
+
+func (s *Server) deleteBearerAPIHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userInt, _ := c.Get(userContextKey)
+		user := userInt.(*models.User)
+
+		var name struct{ Name string }
+		if err := c.ShouldBindJSON(&name); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		err := manager.GetAuthManager().DeleteTokenByName(user.ID, name.Name)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{})
 	}
 }

@@ -2,6 +2,8 @@ package repository
 
 import (
 	"TraefikAccessControl/models"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Add used models to enable auto migration for them
@@ -36,6 +38,12 @@ func (rep *TokenRepository) GetBearerByUser(userID int) (tokens []*models.Token,
 
 func (rep *TokenRepository) DeleteByTokenString(tokenString string) (err error) {
 	err = databaseConnection.Delete(&models.Token{Token: tokenString}).Error
+	return
+}
+
+func (rep *TokenRepository) DeleteByUserName(userID int, name string) (err error) {
+	log.Info(name)
+	err = databaseConnection.Where(&models.Token{UserID: userID, Name: &name}).Delete(&models.Token{}).Error
 	return
 }
 

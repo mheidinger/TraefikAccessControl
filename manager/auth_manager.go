@@ -157,6 +157,10 @@ func (mgr *AuthManager) DeleteToken(tokenString string) (err error) {
 	return mgr.tokenRep.DeleteByTokenString(tokenString)
 }
 
+func (mgr *AuthManager) DeleteTokenByName(userID int, name string) (err error) {
+	return mgr.tokenRep.DeleteByUserName(userID, name)
+}
+
 func (mgr *AuthManager) GetAllUsers() (users []*models.User, err error) {
 	return mgr.userRep.GetAll()
 }
