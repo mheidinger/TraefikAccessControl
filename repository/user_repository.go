@@ -45,6 +45,11 @@ func (rep *UserRepository) Update(user *models.User) (err error) {
 	return
 }
 
+func (rep *UserRepository) Delete(userID int) (err error) {
+	err = databaseConnection.Delete(&models.User{ID: userID}).Error
+	return
+}
+
 func (rep *UserRepository) Clear() (err error) {
 	err = databaseConnection.Delete(&models.User{}).Error
 	return

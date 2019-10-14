@@ -58,6 +58,8 @@ func (s *Server) buildRoutes() {
 	s.Router.GET("/forbidden", s.fillUserFromCookie(), s.forbiddenUIHandler())
 
 	api := s.Router.Group("/api", s.fillUserFromCookie(), s.userMustBeValid(true))
+	api.POST("/user", s.createUserAPIHandler())
+	api.DELETE("/user", s.deleteUserAPIHandler())
 	api.POST("/bearer", s.createBearerAPIHandler())
 	api.DELETE("/bearer", s.deleteBearerAPIHandler())
 }
@@ -289,18 +291,75 @@ func (s *Server) forbiddenUIHandler() gin.HandlerFunc {
 	}
 }
 
+func (s *Server) createUserAPIHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userInt, _ := c.Get(userContextKey)
+		user := userInt.(*models.User)
+
+		if !user.IsAdmin {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Not authorized to create user"})
+			return
+		}
+
+		var userIn models.User
+		if err := c.ShouldBindJSON(&userIn); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		err := manager.GetAuthManager().CreateUser(&userIn)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{})
+	}
+}
+
+func (s *Server) deleteUserAPIHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userInt, _ := c.Get(userContextKey)
+		user := userInt.(*models.User)
+
+		if !user.IsAdmin {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Not authorized to create user"})
+			return
+		}
+
+		var userIn models.User
+		if err := c.ShouldBindJSON(&userIn); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		err := manager.GetAuthManager().DeleteUser(userIn.ID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		err = manager.GetSiteManager().DeleteUserMappings(userIn.ID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{})
+	}
+}
+
 func (s *Server) createBearerAPIHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userInt, _ := c.Get(userContextKey)
 		user := userInt.(*models.User)
 
-		var name struct{ Name string }
-		if err := c.ShouldBindJSON(&name); err != nil {
+		var tokenIn models.Token
+		if err := c.ShouldBindJSON(&tokenIn); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		token, err := manager.GetAuthManager().CreateUserToken(user.ID, &name.Name)
+		token, err := manager.GetAuthManager().CreateUserToken(user.ID, tokenIn.Name)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -315,13 +374,13 @@ func (s *Server) deleteBearerAPIHandler() gin.HandlerFunc {
 		userInt, _ := c.Get(userContextKey)
 		user := userInt.(*models.User)
 
-		var name struct{ Name string }
-		if err := c.ShouldBindJSON(&name); err != nil {
+		var tokenIn models.Token
+		if err := c.ShouldBindJSON(&tokenIn); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		err := manager.GetAuthManager().DeleteTokenByName(user.ID, name.Name)
+		err := manager.GetAuthManager().DeleteTokenByName(user.ID, *tokenIn.Name)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

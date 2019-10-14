@@ -47,11 +47,11 @@
 					<tr>
 						<td>{{.Name}}</td>
 						<td>{{.Token}}</td>
-						<td class="right-align"><a class="bearerDeleteButton" href="#"><i data-tokenName="{{.Name}}" class="material-icons">delete_forever</i></a></td>
+						<td class="right-align"><a class="bearerDeleteButton" href="#"><i data-tokenname="{{.Name}}" class="material-icons">delete_forever</i></a></td>
 					</tr>
 				{{end}}
 				<tr>
-					<td><input type="text" id="bearerNameField"></td>
+					<td><input type="text" id="bearerNameField" placeholder="Name"></td>
 					<td></td>
 					<td>
 						<button class="btn waves-effect waves-light right" id="bearerCreateBtn">
@@ -94,19 +94,25 @@
 									<i class="material-icons">clear</i>
 								{{end}}
 							</td>
-							<td class="right-align"><a href="#delete"><i class="material-icons">delete_forever</i></a></td>
+							<td class="right-align"><a class="userDeleteButton" href="#"><i data-userid={{.ID}} class="material-icons">delete_forever</i></a></td>
 						</tr>
 					{{end}}
+					<tr>
+						<td><input type="text" id="userNameField" placeholder="Username"><input type="password" id="userPasswordField" placeholder="Password"></td>
+						<td class="right-align"><label><input type="checkbox" class="filled-in" id="userAdminField"/><span></span></label></td>
+						<td>
+							<button class="btn waves-effect waves-light right" id="userCreateBtn">
+								Create New
+								<i class="material-icons right">create</i>
+							</button>
+						</td>
+					</tr>
 				</tbody>
 			</table>
 		</div>
 
 		<div class="container">
 			<h4 class="orange-text">All sites:</h4>
-			<button class="btn waves-effect waves-light right">
-				Create New
-				<i class="material-icons right">create</i>
-			</button>
 			<table class="responsive-table striped">
 				<thead>
 					<tr>
@@ -125,9 +131,22 @@
 							<td class="right-align"><a href="#delete"><i class="material-icons">delete_forever</i></a></td>
 						</tr>
 					{{end}}
+					<tr>
+						<td><input type="text" id="siteHostField" placeholder="Host"></td>
+						<td><input type="text" id="sitePathPrefixField" placeholder="Path-Prefix"></td>
+						<td></td>
+						<td>
+							<button class="btn waves-effect waves-light right" id="userCreateBtn">
+								Create New
+								<i class="material-icons right">create</i>
+							</button>
+						</td>
+					</tr>
 				</tbody>
 			</table>
 		</div>
+
+		<script src="/static/js/dashboard_admin.js"></script>
 	{{end}}
 </div>
 {{end}}

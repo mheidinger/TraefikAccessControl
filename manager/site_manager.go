@@ -114,6 +114,10 @@ func (mgr *SiteManager) GetSiteMappingsByUser(user *models.User) (siteMappings [
 	return mgr.siteMappingRep.GetByUser(user.ID)
 }
 
+func (mgr *SiteManager) DeleteUserMappings(userID int) (err error) {
+	return mgr.siteMappingRep.DeleteByUser(userID)
+}
+
 func (mgr *SiteManager) ClearAll() (err error) {
 	err = mgr.siteRep.Clear()
 	if err != nil {

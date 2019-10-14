@@ -63,7 +63,6 @@ func (mgr *AuthManager) CreateUser(user *models.User) (err error) {
 		createLog.WithField("err", err).Error("Password hashing failed")
 		return fmt.Errorf("Password Hashing failed")
 	}
-	user.IsAdmin = false
 
 	err = mgr.userRep.Create(user)
 	if err != nil {
@@ -80,6 +79,21 @@ func (mgr *AuthManager) CreateUser(user *models.User) (err error) {
 		}
 	}
 
+	return
+}
+
+func (mgr *AuthManager) DeleteUser(userID int) (err error) {
+	deleteLogger := log.WithFields(log.Fields{"userID": userID})
+
+	err = mgr.userRep.Delete(userID)
+	if err != nil {
+		deleteLogger.WithField("err", err).Error("Failed to delete user")
+	}
+
+	err = mgr.tokenRep.DeleteByUser(userID)
+	if err != nil {
+		deleteLogger.WithField("err", err).Error("Failed to delete user tokens")
+	}
 	return
 }
 

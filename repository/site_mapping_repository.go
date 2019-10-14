@@ -34,6 +34,11 @@ func (rep *SiteMappingRepository) GetByUser(userID int) (siteMappings []*models.
 	return
 }
 
+func (rep *SiteMappingRepository) DeleteByUser(userID int) (err error) {
+	err = databaseConnection.Where(&models.SiteMapping{UserID: userID}).Delete(&models.SiteMapping{}).Error
+	return
+}
+
 func (rep *SiteMappingRepository) Clear() (err error) {
 	err = databaseConnection.Delete(&models.SiteMapping{}).Error
 	return
