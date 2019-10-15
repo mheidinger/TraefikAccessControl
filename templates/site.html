@@ -1,0 +1,12 @@
+{{define "title"}}Edit Site{{end}}
+
+{{define "body"}}
+<div>
+	<h1 class="header center orange-text">Edit Site</h1>
+
+	<div class="container">
+		<p>Host: {{.site.Host}}</p>
+		<p>Path-Prefix: {{.site.PathPrefix}}</p>
+	</div>
+</div>
+{{end}}

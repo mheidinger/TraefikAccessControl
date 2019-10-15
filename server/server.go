@@ -5,6 +5,7 @@ import (
 	"TraefikAccessControl/models"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -40,8 +41,10 @@ func NewServer(cookieName string) *Server {
 func (s *Server) parseTemplates() {
 	r := multitemplate.NewRenderer()
 	r.AddFromFiles("login", "templates/base.html", "templates/login.html")
+	r.AddFromFiles("site", "templates/base.html", "templates/site.html")
 	r.AddFromFiles("dashboard", "templates/base.html", "templates/dashboard.html")
 	r.AddFromFiles("forbidden", "templates/base.html", "templates/forbidden.html")
+	r.AddFromFiles("notfound", "templates/base.html", "templates/notfound.html")
 	s.Router.HTMLRender = r
 }
 
@@ -51,15 +54,19 @@ func (s *Server) buildRoutes() {
 	s.Router.GET("/access", s.accessHandler())
 
 	s.Router.Static("/static", "./static")
-	s.Router.GET("/", s.fillUserFromCookie(), s.userMustBeValid(false), s.dashboardUIHandler())
+	s.Router.GET("/", s.fillUserFromCookie(), s.userMustBeValid(false, false), s.dashboardUIHandler())
+	s.Router.GET("/site/:id", s.fillUserFromCookie(), s.userMustBeValid(false, true), s.siteUIHandler())
 	s.Router.GET("/login", s.fillUserFromCookie(), s.loginUIHandler())
 	s.Router.POST("/login", s.loginHandler())
 	s.Router.GET("/logout", s.logoutHandler())
 	s.Router.GET("/forbidden", s.fillUserFromCookie(), s.forbiddenUIHandler())
+	s.Router.NoRoute(s.notfoundUIHandler())
 
-	api := s.Router.Group("/api", s.fillUserFromCookie(), s.userMustBeValid(true))
+	api := s.Router.Group("/api", s.fillUserFromCookie(), s.userMustBeValid(true, false))
 	api.POST("/user", s.createUserAPIHandler())
 	api.DELETE("/user", s.deleteUserAPIHandler())
+	api.POST("/site", s.createSiteAPIHandler())
+	api.DELETE("/site", s.deleteSiteAPIHandler())
 	api.POST("/bearer", s.createBearerAPIHandler())
 	api.DELETE("/bearer", s.deleteBearerAPIHandler())
 }
@@ -154,13 +161,22 @@ func (s *Server) fillUserFromCookie() gin.HandlerFunc {
 	}
 }
 
-func (s *Server) userMustBeValid(forAPI bool) gin.HandlerFunc {
+func (s *Server) userMustBeValid(forAPI bool, hasToBeAdmin bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if user, ok := c.Get(userContextKey); ok == false || user == nil {
+		user, ok := c.Get(userContextKey)
+		if ok == false || user == nil {
 			if forAPI {
 				c.String(http.StatusUnauthorized, "Not authenticated")
 			} else {
 				c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, nil))
+			}
+			return
+		}
+		if hasToBeAdmin && !user.(*models.User).IsAdmin {
+			if forAPI {
+				c.String(http.StatusForbidden, "Not an admin")
+			} else {
+				c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/forbidden", nil, nil))
 			}
 			return
 		}
@@ -273,6 +289,39 @@ func (s *Server) dashboardUIHandler() gin.HandlerFunc {
 	}
 }
 
+func (s *Server) siteUIHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		siteID, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			errorValue := "siteNotFound"
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, &errorValue))
+			return
+		}
+
+		site, err := manager.GetSiteManager().GetSiteByID(siteID)
+		if err != nil {
+			errorValue := "siteNotFound"
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, &errorValue))
+			return
+		}
+
+		c.HTML(http.StatusOK, "site", gin.H{
+			"error": c.Query(errorParam),
+			"site":  site,
+		})
+	}
+}
+
+func (s *Server) notfoundUIHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if strings.Contains(c.Request.UserAgent(), "Mozilla") {
+			c.HTML(http.StatusNotFound, "notfound", gin.H{})
+		} else {
+			c.String(http.StatusNotFound, "Not Found", gin.H{})
+		}
+	}
+}
+
 func (s *Server) loginUIHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if user, ok := c.Get(userContextKey); ok == true && user != nil {
@@ -288,7 +337,11 @@ func (s *Server) loginUIHandler() gin.HandlerFunc {
 
 func (s *Server) forbiddenUIHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		userInt, _ := c.Get(userContextKey)
+		user := userInt.(*models.User)
+
 		c.HTML(http.StatusForbidden, "forbidden", gin.H{
+			"user":  user,
 			"error": c.Query(errorParam),
 		})
 	}
@@ -326,7 +379,7 @@ func (s *Server) deleteUserAPIHandler() gin.HandlerFunc {
 		user := userInt.(*models.User)
 
 		if !user.IsAdmin {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Not authorized to create user"})
+			c.JSON(http.StatusForbidden, gin.H{"error": "Not authorized to delete user"})
 			return
 		}
 
@@ -342,6 +395,55 @@ func (s *Server) deleteUserAPIHandler() gin.HandlerFunc {
 			return
 		}
 		err = manager.GetSiteManager().DeleteUserMappings(userIn.ID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{})
+	}
+}
+
+func (s *Server) createSiteAPIHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userInt, _ := c.Get(userContextKey)
+		user := userInt.(*models.User)
+
+		if !user.IsAdmin {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Not authorized to create site"})
+			return
+		}
+
+		var siteIn models.Site
+		if err := c.ShouldBindJSON(&siteIn); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		err := manager.GetSiteManager().CreateSite(&siteIn)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{})
+	}
+}
+
+func (s *Server) deleteSiteAPIHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userInt, _ := c.Get(userContextKey)
+		user := userInt.(*models.User)
+
+		if !user.IsAdmin {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Not authorized to delete site"})
+			return
+		}
+		var siteIn models.Site
+		if err := c.ShouldBindJSON(&siteIn); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		err := manager.GetSiteManager().DeleteSite(siteIn.ID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

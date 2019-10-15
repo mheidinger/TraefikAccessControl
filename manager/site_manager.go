@@ -85,6 +85,17 @@ func (mgr *SiteManager) GetAllSites() (sites []*models.Site, err error) {
 	return mgr.siteRep.GetAll()
 }
 
+func (mgr *SiteManager) DeleteSite(siteID int) (err error) {
+	deleteLog := log.WithField("siteID", siteID)
+
+	err = mgr.siteMappingRep.DeleteBySite(siteID)
+	if err != nil {
+		deleteLog.WithField("err", err).Error("Could not delete site mapping for to be deleted site")
+	}
+
+	return mgr.siteRep.DeleteByID(siteID)
+}
+
 func (mgr *SiteManager) CreateSiteMapping(siteMapping *models.SiteMapping) (err error) {
 	createLog := log.WithFields(log.Fields{"userID": siteMapping.UserID, "siteID": siteMapping.SiteID, "BasicAuthAllowed": siteMapping.BasicAuthAllowed})
 

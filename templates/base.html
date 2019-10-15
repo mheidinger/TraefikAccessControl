@@ -40,6 +40,9 @@
             {{if eq .error "server"}}
               <p>Internal Server Error. Please try again.</p>
             {{end}}
+            {{if eq .error "siteNotFound"}}
+              <p>Specified site not found</p>
+            {{end}}
           </div>
         </div>
       </div>
