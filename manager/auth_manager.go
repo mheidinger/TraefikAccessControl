@@ -119,6 +119,10 @@ func (mgr *AuthManager) CreateUserToken(userID int, name *string) (token *models
 	return
 }
 
+func (mgr *AuthManager) GetUserByID(userID int) (user *models.User, err error) {
+	return mgr.userRep.GetByID(userID)
+}
+
 func (mgr *AuthManager) GetBearerTokens(user *models.User) (tokens []*models.Token, err error) {
 	return mgr.tokenRep.GetBearerByUser(user.ID)
 }

@@ -305,9 +305,52 @@ func (s *Server) siteUIHandler() gin.HandlerFunc {
 			return
 		}
 
+		rawSiteMappings, err := manager.GetSiteManager().GetSiteMappingsBySite(site)
+		if err != nil {
+			errorValue := "server"
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, &errorValue))
+			return
+		}
+
+		siteMappings := make([]struct {
+			SiteMapping *models.SiteMapping
+			User        *models.User
+		}, len(rawSiteMappings))
+
+		for it, rawSiteMapping := range rawSiteMappings {
+			user, err := manager.GetAuthManager().GetUserByID(rawSiteMapping.UserID)
+			if err != nil {
+				continue
+			}
+			siteMappings[it].SiteMapping = rawSiteMapping
+			siteMappings[it].User = user
+		}
+
+		allUsers, err := manager.GetAuthManager().GetAllUsers()
+		if err != nil {
+			errorValue := "server"
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, &errorValue))
+			return
+		}
+		availUsers := make([]*models.User, 0)
+		for _, user := range allUsers {
+			found := false
+			for _, siteMapping := range siteMappings {
+				if user.ID == siteMapping.User.ID {
+					found = true
+					break
+				}
+			}
+			if !found {
+				availUsers = append(availUsers, user)
+			}
+		}
+
 		c.HTML(http.StatusOK, "site", gin.H{
-			"error": c.Query(errorParam),
-			"site":  site,
+			"error":        c.Query(errorParam),
+			"site":         site,
+			"siteMappings": siteMappings,
+			"availUsers":   availUsers,
 		})
 	}
 }
