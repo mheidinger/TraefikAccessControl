@@ -29,10 +29,10 @@
 
 	function onCreateSite(event) {
 		event.preventDefault();
-		const hostField = document.getElementById("siteHostField")
-		const pathPrefixField = document.getElementById("sitePathPrefixField")
-		const body = { "host": hostField.value, "path_prefix": pathPrefixField.value }
-		url.pathname = "/api/site"
+		const hostField = document.getElementById("siteHostField");
+		const pathPrefixField = document.getElementById("sitePathPrefixField");
+		const body = { "host": hostField.value, "path_prefix": pathPrefixField.value };
+		url.pathname = "/api/site";
 		fetch(url.href, {
 			method: "POST",
 			body: JSON.stringify(body)
@@ -43,12 +43,12 @@
 		event.preventDefault();
 		const source = event.target || event.srcElement;
 
-		const body = { "id": parseInt(source.getAttribute("data-siteid")) }
+		const body = { "id": parseInt(source.getAttribute("data-siteid")) };
 		url.pathname = "/api/site";
 		fetch(url.href, {
       method: "DELETE",
       body: JSON.stringify(body)
-    }).then(() => location.reload())
+    }).then(() => location.reload());
 	}
 
 	const createUserButton = document.getElementById("userCreateButton");

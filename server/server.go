@@ -5,11 +5,9 @@ import (
 	"TraefikAccessControl/models"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
-	"github.com/gin-contrib/multitemplate"
 	log "github.com/sirupsen/logrus"
 	ginlogrus "github.com/toorop/gin-logrus"
 	"github.com/weppos/publicsuffix-go/publicsuffix"
@@ -18,9 +16,17 @@ import (
 )
 
 const (
-	errorParam       = "error"
+	errorURLParam    = "error"
+	successURLParam  = "success"
 	redirectURLParam = "redirect_url"
-	userContextKey   = "user"
+
+	userContextKey = "user"
+)
+
+var (
+	errorServer               = "Internal Server Error"
+	errorSite                 = "Site could not be found"
+	errorIncorrectCredentials = "Username or password incorrect"
 )
 
 type Server struct {
@@ -38,37 +44,19 @@ func NewServer(cookieName string) *Server {
 	return s
 }
 
-func (s *Server) parseTemplates() {
-	r := multitemplate.NewRenderer()
-	r.AddFromFiles("login", "templates/base.html", "templates/login.html")
-	r.AddFromFiles("site", "templates/base.html", "templates/site.html")
-	r.AddFromFiles("dashboard", "templates/base.html", "templates/dashboard.html")
-	r.AddFromFiles("forbidden", "templates/base.html", "templates/forbidden.html")
-	r.AddFromFiles("notfound", "templates/base.html", "templates/notfound.html")
-	s.Router.HTMLRender = r
-}
-
 func (s *Server) buildRoutes() {
 	s.Router.Use(ginlogrus.Logger(log.New()), gin.Recovery())
 
-	s.Router.GET("/access", s.accessHandler())
+	s.buildCoreRoutes()
+	s.buildUIRoutes()
+	s.buildAPIRoutes()
+}
 
+func (s *Server) buildCoreRoutes() {
+	s.Router.GET("/access", s.accessHandler())
 	s.Router.Static("/static", "./static")
-	s.Router.GET("/", s.fillUserFromCookie(), s.userMustBeValid(false, false), s.dashboardUIHandler())
-	s.Router.GET("/site/:id", s.fillUserFromCookie(), s.userMustBeValid(false, true), s.siteUIHandler())
-	s.Router.GET("/login", s.fillUserFromCookie(), s.loginUIHandler())
 	s.Router.POST("/login", s.loginHandler())
 	s.Router.GET("/logout", s.logoutHandler())
-	s.Router.GET("/forbidden", s.fillUserFromCookie(), s.forbiddenUIHandler())
-	s.Router.NoRoute(s.notfoundUIHandler())
-
-	api := s.Router.Group("/api", s.fillUserFromCookie(), s.userMustBeValid(true, false))
-	api.POST("/user", s.createUserAPIHandler())
-	api.DELETE("/user", s.deleteUserAPIHandler())
-	api.POST("/site", s.createSiteAPIHandler())
-	api.DELETE("/site", s.deleteSiteAPIHandler())
-	api.POST("/bearer", s.createBearerAPIHandler())
-	api.DELETE("/bearer", s.deleteBearerAPIHandler())
 }
 
 func (s *Server) accessHandler() gin.HandlerFunc {
@@ -134,7 +122,9 @@ func (s *Server) getRedirectURL(reqURL url.URL, path string, origURL, errVal *st
 		q.Set(redirectURLParam, *origURL)
 	}
 	if errVal != nil {
-		q.Set(errorParam, *errVal)
+		q.Set(errorURLParam, *errVal)
+	} else {
+		q.Del(errorURLParam)
 	}
 	redirectURL.RawQuery = q.Encode()
 
@@ -191,14 +181,12 @@ func (s *Server) loginHandler() gin.HandlerFunc {
 
 		user, err := manager.GetAuthManager().ValidateCredentials(username, password)
 		if err != nil {
-			errVal := "incorrect"
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, &errVal))
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, &errorIncorrectCredentials))
 			return
 		}
 		token, err := manager.GetAuthManager().CreateUserToken(user.ID, nil)
 		if err != nil {
-			errVal := "server"
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, &errVal))
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, &errorServer))
 			return
 		}
 
@@ -227,313 +215,5 @@ func (s *Server) logoutHandler() gin.HandlerFunc {
 		}
 		c.SetCookie(s.cookieName, "", -1, "", "", false, true)
 		c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, nil))
-	}
-}
-
-func (s *Server) dashboardUIHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userInt, _ := c.Get(userContextKey)
-		user, ok := userInt.(*models.User)
-		if !ok {
-			c.HTML(http.StatusInternalServerError, "dashboard", gin.H{"error": "server"})
-			return
-		}
-
-		rawSiteMappings, err := manager.GetSiteManager().GetSiteMappingsByUser(user)
-		if err != nil {
-			c.HTML(http.StatusInternalServerError, "dashboard", gin.H{"error": "server"})
-			return
-		}
-
-		siteMappings := make([]struct {
-			SiteMapping *models.SiteMapping
-			Site        *models.Site
-		}, len(rawSiteMappings))
-
-		for it, rawSiteMapping := range rawSiteMappings {
-			site, err := manager.GetSiteManager().GetSiteByID(rawSiteMapping.SiteID)
-			if err != nil {
-				continue
-			}
-			siteMappings[it].SiteMapping = rawSiteMapping
-			siteMappings[it].Site = site
-		}
-
-		tokens, err := manager.GetAuthManager().GetBearerTokens(user)
-		for _, token := range tokens {
-			if time.Now().After(token.CreatedAt.Add(2 * time.Minute)) {
-				token.Token = token.Token[0:4] + strings.Repeat("×", len(token.Token)-4)
-			}
-		}
-
-		users, err := manager.GetAuthManager().GetAllUsers()
-		if err != nil {
-			c.HTML(http.StatusInternalServerError, "dashboard", gin.H{"error": "server"})
-			return
-		}
-
-		sites, err := manager.GetSiteManager().GetAllSites()
-		if err != nil {
-			c.HTML(http.StatusInternalServerError, "dashboard", gin.H{"error": "server"})
-			return
-		}
-
-		c.HTML(http.StatusOK, "dashboard", gin.H{
-			"error":        c.Query(errorParam),
-			"user":         user,
-			"siteMappings": siteMappings,
-			"tokens":       tokens,
-			"users":        users,
-			"sites":        sites,
-		})
-	}
-}
-
-func (s *Server) siteUIHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		siteID, err := strconv.Atoi(c.Param("id"))
-		if err != nil {
-			errorValue := "siteNotFound"
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, &errorValue))
-			return
-		}
-
-		site, err := manager.GetSiteManager().GetSiteByID(siteID)
-		if err != nil {
-			errorValue := "siteNotFound"
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, &errorValue))
-			return
-		}
-
-		rawSiteMappings, err := manager.GetSiteManager().GetSiteMappingsBySite(site)
-		if err != nil {
-			errorValue := "server"
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, &errorValue))
-			return
-		}
-
-		siteMappings := make([]struct {
-			SiteMapping *models.SiteMapping
-			User        *models.User
-		}, len(rawSiteMappings))
-
-		for it, rawSiteMapping := range rawSiteMappings {
-			user, err := manager.GetAuthManager().GetUserByID(rawSiteMapping.UserID)
-			if err != nil {
-				continue
-			}
-			siteMappings[it].SiteMapping = rawSiteMapping
-			siteMappings[it].User = user
-		}
-
-		allUsers, err := manager.GetAuthManager().GetAllUsers()
-		if err != nil {
-			errorValue := "server"
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, &errorValue))
-			return
-		}
-		availUsers := make([]*models.User, 0)
-		for _, user := range allUsers {
-			found := false
-			for _, siteMapping := range siteMappings {
-				if user.ID == siteMapping.User.ID {
-					found = true
-					break
-				}
-			}
-			if !found {
-				availUsers = append(availUsers, user)
-			}
-		}
-
-		c.HTML(http.StatusOK, "site", gin.H{
-			"error":        c.Query(errorParam),
-			"site":         site,
-			"siteMappings": siteMappings,
-			"availUsers":   availUsers,
-		})
-	}
-}
-
-func (s *Server) notfoundUIHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if strings.Contains(c.Request.UserAgent(), "Mozilla") {
-			c.HTML(http.StatusNotFound, "notfound", gin.H{})
-		} else {
-			c.String(http.StatusNotFound, "Not Found", gin.H{})
-		}
-	}
-}
-
-func (s *Server) loginUIHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if user, ok := c.Get(userContextKey); ok == true && user != nil {
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, nil))
-			return
-		}
-
-		c.HTML(http.StatusOK, "login", gin.H{
-			"error": c.Query(errorParam),
-		})
-	}
-}
-
-func (s *Server) forbiddenUIHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userInt, _ := c.Get(userContextKey)
-		user := userInt.(*models.User)
-
-		c.HTML(http.StatusForbidden, "forbidden", gin.H{
-			"user":  user,
-			"error": c.Query(errorParam),
-		})
-	}
-}
-
-func (s *Server) createUserAPIHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userInt, _ := c.Get(userContextKey)
-		user := userInt.(*models.User)
-
-		if !user.IsAdmin {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Not authorized to create user"})
-			return
-		}
-
-		var userIn models.User
-		if err := c.ShouldBindJSON(&userIn); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		err := manager.GetAuthManager().CreateUser(&userIn)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{})
-	}
-}
-
-func (s *Server) deleteUserAPIHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userInt, _ := c.Get(userContextKey)
-		user := userInt.(*models.User)
-
-		if !user.IsAdmin {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Not authorized to delete user"})
-			return
-		}
-
-		var userIn models.User
-		if err := c.ShouldBindJSON(&userIn); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		err := manager.GetAuthManager().DeleteUser(userIn.ID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		err = manager.GetSiteManager().DeleteUserMappings(userIn.ID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{})
-	}
-}
-
-func (s *Server) createSiteAPIHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userInt, _ := c.Get(userContextKey)
-		user := userInt.(*models.User)
-
-		if !user.IsAdmin {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Not authorized to create site"})
-			return
-		}
-
-		var siteIn models.Site
-		if err := c.ShouldBindJSON(&siteIn); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		err := manager.GetSiteManager().CreateSite(&siteIn)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{})
-	}
-}
-
-func (s *Server) deleteSiteAPIHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userInt, _ := c.Get(userContextKey)
-		user := userInt.(*models.User)
-
-		if !user.IsAdmin {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Not authorized to delete site"})
-			return
-		}
-		var siteIn models.Site
-		if err := c.ShouldBindJSON(&siteIn); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		err := manager.GetSiteManager().DeleteSite(siteIn.ID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{})
-	}
-}
-
-func (s *Server) createBearerAPIHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userInt, _ := c.Get(userContextKey)
-		user := userInt.(*models.User)
-
-		var tokenIn models.Token
-		if err := c.ShouldBindJSON(&tokenIn); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		token, err := manager.GetAuthManager().CreateUserToken(user.ID, tokenIn.Name)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusOK, token)
-	}
-}
-
-func (s *Server) deleteBearerAPIHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userInt, _ := c.Get(userContextKey)
-		user := userInt.(*models.User)
-
-		var tokenIn models.Token
-		if err := c.ShouldBindJSON(&tokenIn); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		err := manager.GetAuthManager().DeleteTokenByName(user.ID, *tokenIn.Name)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{})
 	}
 }

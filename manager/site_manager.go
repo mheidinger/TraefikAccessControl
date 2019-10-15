@@ -85,6 +85,13 @@ func (mgr *SiteManager) GetAllSites() (sites []*models.Site, err error) {
 	return mgr.siteRep.GetAll()
 }
 
+func (mgr *SiteManager) UpdateSite(site *models.Site) (err error) {
+	if !strings.HasPrefix(site.PathPrefix, "/") {
+		site.PathPrefix = "/" + site.PathPrefix
+	}
+	return mgr.siteRep.Update(site)
+}
+
 func (mgr *SiteManager) DeleteSite(siteID int) (err error) {
 	deleteLog := log.WithField("siteID", siteID)
 
@@ -127,6 +134,10 @@ func (mgr *SiteManager) GetSiteMappingsByUser(user *models.User) (siteMappings [
 
 func (mgr *SiteManager) GetSiteMappingsBySite(site *models.Site) (siteMappings []*models.SiteMapping, err error) {
 	return mgr.siteMappingRep.GetBySite(site.ID)
+}
+
+func (mgr *SiteManager) DeleteSiteMapping(userID, siteID int) (err error) {
+	return mgr.siteMappingRep.Delete(userID, siteID)
 }
 
 func (mgr *SiteManager) DeleteUserMappings(userID int) (err error) {

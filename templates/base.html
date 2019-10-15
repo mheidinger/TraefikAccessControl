@@ -34,15 +34,18 @@
         <div class="card red darken-1">
           <div class="card-content white-text">
             <span class="card-title">Error</span>
-            {{if eq .error "incorrect"}}
-              <p>Username or password incorrect!</p>
-            {{end}}
-            {{if eq .error "server"}}
-              <p>Internal Server Error. Please try again.</p>
-            {{end}}
-            {{if eq .error "siteNotFound"}}
-              <p>Specified site not found</p>
-            {{end}}
+            <p>{{.error}}</p>
+          </div>
+        </div>
+      </div>
+      {{end}}
+
+      {{if .success}}
+      <div class="col s2">
+        <div class="card green darken-1">
+          <div class="card-content white-text">
+            <span class="card-title">Success</span>
+            <p>{{.success}}</p>
           </div>
         </div>
       </div>

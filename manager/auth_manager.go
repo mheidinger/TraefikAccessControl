@@ -82,6 +82,20 @@ func (mgr *AuthManager) CreateUser(user *models.User) (err error) {
 	return
 }
 
+func (mgr *AuthManager) UpdateUserPassword(user *models.User, password string) (err error) {
+	if password == "" {
+		return fmt.Errorf("Password not valid")
+	}
+
+	user.Password, err = crypt.HashScrypt(password)
+	if err != nil {
+		log.WithField("err", err).Error("Failed to change user password")
+		return fmt.Errorf("Saving user failed")
+	}
+
+	return mgr.userRep.Update(user)
+}
+
 func (mgr *AuthManager) DeleteUser(userID int) (err error) {
 	deleteLogger := log.WithFields(log.Fields{"userID": userID})
 

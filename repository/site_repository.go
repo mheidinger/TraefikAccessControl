@@ -40,7 +40,12 @@ func (rep *SiteRepository) GetAll() (sites []*models.Site, err error) {
 }
 
 func (rep *SiteRepository) DeleteByID(siteID int) (err error) {
-	err = databaseConnection.Delete(&models.Site{ID: siteID}).Error
+	err = databaseConnection.Where(&models.Site{ID: siteID}).Delete(&models.Site{}).Error
+	return
+}
+
+func (rep *SiteRepository) Update(site *models.Site) (err error) {
+	err = databaseConnection.Save(site).Error
 	return
 }
 

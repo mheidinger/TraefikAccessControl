@@ -56,12 +56,26 @@
 					<td>
 						<button class="btn waves-effect waves-light right" id="bearerCreateButton">
 							Create New
-							<i class="material-icons right">create</i>
+							<i class="material-icons right">add</i>
 						</button>
 					</td>
 				</tr>
 			</tbody>
 		</table>
+	</div>
+
+	<div class="container">
+		<h4 class="orange-text">Change Password:</h4>
+		<div class="row">
+			<div class="input-field col s10">
+				<input id="changePasswordField" type="password">
+				<label for="changePasswordField">Password</label>
+			</div>
+			<button class="btn waves-effect waves-light col s2" id="changePasswordButton">
+				Change
+				<i class="material-icons right">edit</i>
+			</button>
+		</div>
 	</div>
 
 	<script src="/static/js/dashboard.js"></script>
@@ -71,10 +85,6 @@
 
 		<div class="container">
 			<h4 class="orange-text">All users:</h4>
-			<button class="btn waves-effect waves-light right">
-				Create New
-				<i class="material-icons right">create</i>
-			</button>
 			<table class="responsive-table striped">
 				<thead>
 					<tr>
@@ -103,7 +113,7 @@
 						<td>
 							<button class="btn waves-effect waves-light right" id="userCreateButton">
 								Create New
-								<i class="material-icons right">create</i>
+								<i class="material-icons right">add</i>
 							</button>
 						</td>
 					</tr>
@@ -118,7 +128,7 @@
 					<tr>
 						<th>Host</th>
 						<th>Path-Prefix</th>
-						<th class="right-align">Change</th>
+						<th class="right-align">Edit</th>
 						<th class="right-align">Delete</th>
 					</tr>
 				</thead>
@@ -138,7 +148,7 @@
 						<td>
 							<button class="btn waves-effect waves-light right" id="siteCreateButton">
 								Create New
-								<i class="material-icons right">create</i>
+								<i class="material-icons right">add</i>
 							</button>
 						</td>
 					</tr>

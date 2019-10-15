@@ -5,8 +5,18 @@
 	<h1 class="header center orange-text">Edit Site</h1>
 
 	<div class="container">
-		<p>Host: {{.site.Host}}</p>
-		<p>Path-Prefix: {{.site.PathPrefix}}</p>
+		<div class="input-field">
+			<input value="{{.site.Host}}" id="siteHostField" type="text">
+      <label for="siteHostField">Host</label>
+		</div>
+		<div class="input-field">
+			<input value="{{.site.PathPrefix}}" id="sitePathPrefixField" type="text">
+      <label for="sitePathPrefixField">Path-Prefix</label>
+		</div>
+		<button class="btn waves-effect waves-light right-align" id="siteEditButton">
+			Save
+			<i class="material-icons right">save</i>
+		</button>
 	</div>
 
 	<div class="container">
@@ -30,12 +40,12 @@
 								<i class="material-icons">clear</i>
 							{{end}}
 						</td>
-						<td class="right-align"><a class="mappingDeleteButton" href="#"><i data-tokenname="{{.User.Username}}" class="material-icons">delete_forever</i></a></td>
+						<td class="right-align"><a class="mappingDeleteButton" href="#"><i data-userid="{{.User.ID}}" class="material-icons">delete_forever</i></a></td>
 					</tr>
 				{{end}}
 				<tr>
 					<td>
-						<select>
+						<select id="mappingUserField">
 							<option value="" disabled selected>Select user</option>
 							{{range .availUsers}}
 								<option value="{{.ID}}">{{.Username}}</option>
@@ -44,9 +54,9 @@
 					</td>
 					<td class="right-align"><label><input type="checkbox" class="filled-in" id="mappingBasicAuthField"/><span></span></label></td>
 					<td>
-						<button class="btn waves-effect waves-light right" id="mappingCreateButton">
-							Create New
-							<i class="material-icons right">create</i>
+						<button class="btn waves-effect waves-light right" id="mappingAddButton">
+							Add
+							<i class="material-icons right">add</i>
 						</button>
 					</td>
 				</tr>
