@@ -101,19 +101,19 @@ func (s *Server) siteUIHandler() gin.HandlerFunc {
 
 		siteID, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, &errorSite))
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, &errorSite, nil))
 			return
 		}
 
 		site, err := manager.GetSiteManager().GetSiteByID(siteID)
 		if err != nil {
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, &errorSite))
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, &errorSite, nil))
 			return
 		}
 
 		rawSiteMappings, err := manager.GetSiteManager().GetSiteMappingsBySite(site)
 		if err != nil {
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, &errorServer))
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, &errorServer, nil))
 			return
 		}
 
@@ -133,7 +133,7 @@ func (s *Server) siteUIHandler() gin.HandlerFunc {
 
 		allUsers, err := manager.GetAuthManager().GetAllUsers()
 		if err != nil {
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, &errorServer))
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, &errorServer, nil))
 			return
 		}
 		availUsers := make([]*models.User, 0)
@@ -177,7 +177,7 @@ func (s *Server) notfoundUIHandler() gin.HandlerFunc {
 func (s *Server) loginUIHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if user, ok := c.Get(userContextKey); ok == true && user != nil {
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, nil))
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, nil, nil))
 			return
 		}
 

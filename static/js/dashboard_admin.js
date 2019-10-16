@@ -1,42 +1,31 @@
 (() => {
-	const url = new URL(document.location.href);
+	const url = new URL(location.href);
 
 	function onCreateUser(event) {
 		event.preventDefault();
 
-		const nameField = document.getElementById("userNameField")
-		const passwordField = document.getElementById("userPasswordField")
-		const adminField = document.getElementById("userAdminField")
-		const body = { "username": nameField.value, "password": passwordField.value, "is_admin": adminField.checked }
-		url.pathname = "/api/user"
-		fetch(url.href, {
-			method: "POST",
-			body: JSON.stringify(body)
-		}).then(() => location.reload())
+		const nameField = document.getElementById("userNameField");
+		const passwordField = document.getElementById("userPasswordField");
+		const adminField = document.getElementById("userAdminField");
+		const body = { "username": nameField.value, "password": passwordField.value, "is_admin": adminField.checked };
+		sendAPIRequest("POST", "/api/user", body, "Successfully created new user", "Failed to create new user: ");
 	}
 
 	function onDeleteUser(event) {
 		event.preventDefault();
 		const source = event.target || event.srcElement;
 
-		const body = { "id": parseInt(source.getAttribute("data-userid")) }
-		url.pathname = "/api/user";
-		fetch(url.href, {
-      method: "DELETE",
-      body: JSON.stringify(body)
-    }).then(() => location.reload())
+		const body = { "id": parseInt(source.getAttribute("data-userid")) };
+		sendAPIRequest("DELETE", "/api/user", body, "Sucessfully deleted user", "Failed to delete user: ");
 	}
 
 	function onCreateSite(event) {
 		event.preventDefault();
+
 		const hostField = document.getElementById("siteHostField");
 		const pathPrefixField = document.getElementById("sitePathPrefixField");
 		const body = { "host": hostField.value, "path_prefix": pathPrefixField.value };
-		url.pathname = "/api/site";
-		fetch(url.href, {
-			method: "POST",
-			body: JSON.stringify(body)
-		}).then(() => location.reload())
+		sendAPIRequest("POST", "/api/site", body, "Successfully created new site", "Failed to create new site: ");
 	}
 
 	function onDeleteSite(event) {
@@ -44,11 +33,7 @@
 		const source = event.target || event.srcElement;
 
 		const body = { "id": parseInt(source.getAttribute("data-siteid")) };
-		url.pathname = "/api/site";
-		fetch(url.href, {
-      method: "DELETE",
-      body: JSON.stringify(body)
-    }).then(() => location.reload());
+		sendAPIRequest("DELETE", "/api/site", body, "Successfully deleted site", "Failed to delete site: ");
 	}
 
 	const createUserButton = document.getElementById("userCreateButton");

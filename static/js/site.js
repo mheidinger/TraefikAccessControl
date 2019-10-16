@@ -1,6 +1,6 @@
 (() => {
-  const url = new URL(document.location.href);
-  const siteID = parseInt(document.location.pathname.split("/").pop());
+  const url = new URL(location.href);
+  const siteID = parseInt(location.pathname.split("/").pop());
 
   function onEditSite(event) {
     event.preventDefault();
@@ -8,11 +8,7 @@
     const hostField = document.getElementById("siteHostField")
     const pathPrefixField = document.getElementById("sitePathPrefixField")
     const body = { "id": siteID, "host": hostField.value, "path_prefix": pathPrefixField.value };
-    url.pathname = "/api/site";
-		fetch(url.href, {
-			method: "PUT",
-			body: JSON.stringify(body)
-		}).then(() => location.reload());
+    sendAPIRequest("PUT", "/api/site", body, "Successfully changed site", "Failed to change site: ");
   }
 
   function onCreateMapping(event) {
@@ -21,23 +17,15 @@
     const userField = document.getElementById("mappingUserField")
     const basicAuthField = document.getElementById("mappingBasicAuthField")
     const body = { "user_id": parseInt(userField.value), "site_id": siteID, "basic_auth_allowed": basicAuthField.checked };
-		url.pathname = "/api/mapping";
-		fetch(url.href, {
-			method: "POST",
-			body: JSON.stringify(body)
-		}).then(() => location.reload());
+    sendAPIRequest("POST", "/api/mapping", body, "Successfully added user mapping", "Failed to add user mapping: ");
   }
 
   function onDeleteMapping(event) {
     event.preventDefault();
     const source = event.target || event.srcElement;
 
-		const body = { "user_id": parseInt(source.getAttribute("data-userid")), "site_id": siteID };
-		url.pathname = "/api/mapping";
-		fetch(url.href, {
-      method: "DELETE",
-      body: JSON.stringify(body)
-    }).then(() => location.reload());
+    const body = { "user_id": parseInt(source.getAttribute("data-userid")), "site_id": siteID };
+    sendAPIRequest("DELETE", "/api/mapping", body, "Successfully deleted user mapping", "Failed to delete user mapping: ");
   }
 
 	document.addEventListener('DOMContentLoaded', function() {

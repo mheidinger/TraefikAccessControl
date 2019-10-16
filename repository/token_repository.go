@@ -42,7 +42,7 @@ func (rep *TokenRepository) DeleteByTokenString(tokenString string) (err error) 
 }
 
 func (rep *TokenRepository) DeleteByUser(userID int) (err error) {
-	err = databaseConnection.Where(&models.Token{UserID: userID}).Delete(&models.User{}).Error
+	err = databaseConnection.Where(&models.Token{UserID: userID}).Delete(&models.Token{}).Error
 	return
 }
 

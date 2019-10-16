@@ -27,6 +27,8 @@ var (
 	errorServer               = "Internal Server Error"
 	errorSite                 = "Site could not be found"
 	errorIncorrectCredentials = "Username or password incorrect"
+
+	successLogout = "Successfully logged out"
 )
 
 type Server struct {
@@ -105,26 +107,33 @@ func (s *Server) accessHandler() gin.HandlerFunc {
 		if accessGranted {
 			c.Status(http.StatusOK)
 		} else if isBrowser && user == nil {
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", &completeURLString, nil))
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", &completeURLString, nil, nil))
 		} else if isBrowser && user != nil {
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/forbidden", &completeURLString, nil))
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/forbidden", &completeURLString, nil, nil))
 		} else {
 			c.String(http.StatusUnauthorized, "No access granted")
 		}
 	}
 }
 
-func (s *Server) getRedirectURL(reqURL url.URL, path string, origURL, errVal *string) string {
+func (s *Server) getRedirectURL(reqURL url.URL, path string, origURL, errVal, successVal *string) string {
 	redirectURL := reqURL
 	redirectURL.Path = path
 	q := redirectURL.Query()
 	if origURL != nil {
 		q.Set(redirectURLParam, *origURL)
+	} else {
+		q.Del(redirectURLParam)
 	}
 	if errVal != nil {
 		q.Set(errorURLParam, *errVal)
 	} else {
 		q.Del(errorURLParam)
+	}
+	if successVal != nil {
+		q.Set(successURLParam, *successVal)
+	} else {
+		q.Del(successURLParam)
 	}
 	redirectURL.RawQuery = q.Encode()
 
@@ -158,7 +167,7 @@ func (s *Server) userMustBeValid(forAPI bool, hasToBeAdmin bool) gin.HandlerFunc
 			if forAPI {
 				c.String(http.StatusUnauthorized, "Not authenticated")
 			} else {
-				c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, nil))
+				c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, nil, nil))
 			}
 			return
 		}
@@ -166,7 +175,7 @@ func (s *Server) userMustBeValid(forAPI bool, hasToBeAdmin bool) gin.HandlerFunc
 			if forAPI {
 				c.String(http.StatusForbidden, "Not an admin")
 			} else {
-				c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/forbidden", nil, nil))
+				c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/forbidden", nil, nil, nil))
 			}
 			return
 		}
@@ -181,12 +190,12 @@ func (s *Server) loginHandler() gin.HandlerFunc {
 
 		user, err := manager.GetAuthManager().ValidateCredentials(username, password)
 		if err != nil {
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, &errorIncorrectCredentials))
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, &errorIncorrectCredentials, nil))
 			return
 		}
 		token, err := manager.GetAuthManager().CreateUserToken(user.ID, nil)
 		if err != nil {
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, &errorServer))
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, &errorServer, nil))
 			return
 		}
 
@@ -202,7 +211,7 @@ func (s *Server) loginHandler() gin.HandlerFunc {
 		if redirect != "" {
 			c.Redirect(http.StatusFound, redirect)
 		} else {
-			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, nil))
+			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/", nil, nil, nil))
 		}
 	}
 }
@@ -214,6 +223,6 @@ func (s *Server) logoutHandler() gin.HandlerFunc {
 			manager.GetAuthManager().DeleteToken(cookie.Value)
 		}
 		c.SetCookie(s.cookieName, "", -1, "", "", false, true)
-		c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, nil))
+		c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, nil, &successLogout))
 	}
 }

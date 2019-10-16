@@ -1,16 +1,10 @@
 (() => {
-	const url = new URL(document.location.href);
-
 	function onCreateBearer(event) {
 		event.preventDefault();
 
 		const nameField = document.getElementById("bearerNameField");
 		const body = { "name": nameField.value };
-		url.pathname = "/api/bearer";
-		fetch(url.href, {
-			method: "POST",
-			body: JSON.stringify(body)
-		}).then(() => location.reload());
+		sendAPIRequest("POST", "/api/bearer", body, "Successfully created bearer", "Failed to create bearer: ");
 	}
 
 	function onDeleteBearer(event) {
@@ -18,24 +12,16 @@
 		const source = event.target || event.srcElement;
 
 		const body = { "name": source.getAttribute("data-tokenname") };
-		url.pathname = "/api/bearer";
-		fetch(url.href, {
-      method: "DELETE",
-      body: JSON.stringify(body)
-    }).then(() => location.reload());
+		sendAPIRequest("DELETE", "/api/bearer", body, "Successfully deleted bearer", "Failed to delete bearer: ");
 	}
 
 	function onChangePassword(event) {
 		event.preventDefault();
 		const source = event.target || event.srcElement;
 
-		const passwordField = document.getElementById("changePasswordField")
+		const passwordField = document.getElementById("changePasswordField");
 		const body = { "password": passwordField.value };
-		url.pathname = "/api/user"
-		fetch(url.href, {
-      method: "PUT",
-      body: JSON.stringify(body)
-    }).then(() => location.reload());
+		sendAPIRequest("PUT", "/api/user", body, "Successfully changed password", "Failed to change password: ");
 	}
 
 	const createBearerButton = document.getElementById("bearerCreateButton");
@@ -46,6 +32,6 @@
 		button.onclick = onDeleteBearer;
 	}
 
-	const changePasswordButton = document.getElementById("changePasswordButton")
+	const changePasswordButton = document.getElementById("changePasswordButton");
 	changePasswordButton.onclick = onChangePassword;
 })();
