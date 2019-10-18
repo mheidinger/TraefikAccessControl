@@ -13,56 +13,64 @@
 			<input value="{{.site.PathPrefix}}" id="sitePathPrefixField" type="text">
       <label for="sitePathPrefixField">Path-Prefix</label>
 		</div>
+		<div class="input-field">
+			<label id="siteAnonymousAccessLabel">
+				<input type="checkbox" class="filled-in" id="siteAnonymousAccessField" {{if .site.AnonymousAccess}} checked="checked" {{end}}/>
+				<span>Anonymous Access</span>
+			</label>
+		</div>
 		<button class="btn waves-effect waves-light right-align" id="siteEditButton">
 			Save
 			<i class="material-icons right">save</i>
 		</button>
 	</div>
 
-	<div class="container">
-		<h4 class="orange-text">Users mapped to site:</h4>
-		<table class="responsive-table striped">
-			<thead>
-				<tr>
-					<th>Username</th>
-					<th class="right-align">BasicAuth Allowed</th>
-					<th class="right-align">Delete</th>
-				</tr>
-			</thead>
-			<tbody>
-				{{range .siteMappings}}
+	{{if not .site.AnonymousAccess}}
+		<div class="container">
+			<h4 class="orange-text">Users mapped to site:</h4>
+			<table class="responsive-table striped">
+				<thead>
 					<tr>
-						<td>{{.User.Username}}</td>
-						<td class="right-align">
-							{{if .SiteMapping.BasicAuthAllowed}}
-								<i class="material-icons">done</i>
-							{{else}}
-								<i class="material-icons">clear</i>
-							{{end}}
-						</td>
-						<td class="right-align"><a class="mappingDeleteButton" href="#"><i data-userid="{{.User.ID}}" class="material-icons">delete_forever</i></a></td>
+						<th>Username</th>
+						<th class="right-align">BasicAuth Allowed</th>
+						<th class="right-align">Delete</th>
 					</tr>
-				{{end}}
-				<tr>
-					<td>
-						<select id="mappingUserField">
-							<option value="" disabled selected>Select user</option>
-							{{range .availUsers}}
-								<option value="{{.ID}}">{{.Username}}</option>
-							{{end}}
-						</select>
-					</td>
-					<td class="right-align"><label><input type="checkbox" class="filled-in" id="mappingBasicAuthField"/><span></span></label></td>
-					<td>
-						<button class="btn waves-effect waves-light right" id="mappingAddButton">
-							Add
-							<i class="material-icons right">add</i>
-						</button>
-					</td>
-				</tr>
-			</tbody>
-		</table>
-	</div>
+				</thead>
+				<tbody>
+					{{range .siteMappings}}
+						<tr>
+							<td>{{.User.Username}}</td>
+							<td class="right-align">
+								{{if .SiteMapping.BasicAuthAllowed}}
+									<i class="material-icons">done</i>
+								{{else}}
+									<i class="material-icons">clear</i>
+								{{end}}
+							</td>
+							<td class="right-align"><a class="mappingDeleteButton" href="#"><i data-userid="{{.User.ID}}" class="material-icons">delete_forever</i></a></td>
+						</tr>
+					{{end}}
+					<tr>
+						<td>
+							<select id="mappingUserField">
+								<option value="" disabled selected>Select user</option>
+								{{range .availUsers}}
+									<option value="{{.ID}}">{{.Username}}</option>
+								{{end}}
+							</select>
+						</td>
+						<td class="right-align"><label><input type="checkbox" class="filled-in" id="mappingBasicAuthField"/><span></span></label></td>
+						<td>
+							<button class="btn waves-effect waves-light right" id="mappingAddButton">
+								Add
+								<i class="material-icons right">add</i>
+							</button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	{{end}}
 
 	<script type="text/javascript" src="/static/js/site.js"></script>
 </div>

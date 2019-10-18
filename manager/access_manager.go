@@ -60,6 +60,10 @@ func (mgr *AccessManager) CheckAccess(host, path string, user *models.User, from
 		return
 	}
 
+	if site.AnonymousAccess {
+		return true, nil
+	}
+
 	siteMapping, err := GetSiteManager().GetSiteMapping(user, site)
 	if err != nil && !repository.IsRecordNotFoundError(err) {
 		requestLogger.WithField("err", err).Error("Failed to get site mapping")

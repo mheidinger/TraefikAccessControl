@@ -7,7 +7,9 @@
   <link type="text/css" rel="stylesheet" href="/static/style/material-icons.css">
   <link type="text/css" rel="stylesheet" href="/static/materialize/materialize.min.css" media="screen,projection"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link type="text/css" rel="stylesheet" href="/static/style/main.css">
+  <link type="text/css" rel="stylesheet" href="/static/style/common.css">
+
+  <script type="text/javascript" src="/static/js/common.js"></script> <!-- Only contains helper functions -->
 </head>
 <body>
   <header>
@@ -31,7 +33,7 @@
 
       {{if .error}}
       <div class="col s2">
-        <div class="card red darken-1">
+        <div class="card red darken-1" if="errorCard">
           <div class="card-content white-text">
             <span class="card-title">Error</span>
             <p>{{.error}}</p>
@@ -42,7 +44,7 @@
 
       {{if .success}}
       <div class="col s2">
-        <div class="card green darken-1">
+        <div class="card green darken-1" id="successCard">
           <div class="card-content white-text">
             <span class="card-title">Success</span>
             <p>{{.success}}</p>
@@ -60,6 +62,5 @@
   </footer>
 
   <script type="text/javascript" src="/static/materialize/materialize.min.js"></script>
-  <script type="text/javascript" src="/static/js/common.js"></script>
 </body>
 </html>

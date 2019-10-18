@@ -1,0 +1,43 @@
+body {
+	display: flex;
+	min-height: 100vh;
+	flex-direction: column;
+}
+
+main {
+	flex: 1 0 auto;
+}
+
+.page-footer {
+	padding-bottom: 1em;
+}
+
+#siteAnonymousAccessLabel {
+	position: relative;
+}
+
+#errorCard, #successCard {
+  -webkit-animation: fadeOut 1.5s forwards;
+  -webkit-animation-iteration-count: 1;
+  -webkit-animation-delay: 5s;
+  animation: fadeOut 1.5s forwards;
+  animation-iteration-count: 1;
+  animation-delay: 5s;
+}
+
+@-webkit-keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
