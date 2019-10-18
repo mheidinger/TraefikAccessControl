@@ -8,6 +8,11 @@ main {
 	flex: 1 0 auto;
 }
 
+.brand-logo img {
+	vertical-align: middle;
+	height: 1.8em;
+}
+
 .page-footer {
 	padding-bottom: 1em;
 }

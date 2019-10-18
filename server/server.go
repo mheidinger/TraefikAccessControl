@@ -102,7 +102,7 @@ func (s *Server) accessHandler() gin.HandlerFunc {
 		} else {
 			requestLogger.Info("No auth information in request")
 
-			accessGranted, err = manager.GetAccessManager().CheckAccess(host, path, nil, false, requestLogger)
+			accessGranted, err = manager.GetAccessManager().CheckAnonymousAccess(host, path, requestLogger)
 		}
 
 		isBrowser := strings.Contains(c.Request.UserAgent(), "Mozilla")

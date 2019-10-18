@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8">
   <title>TAC - {{template "title"}}</title>
+ 
+  <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon"/>
+  <link rel="shortcut icon" href="/static/images/favicon.ico" type="image/x-icon"/>
 
   <link type="text/css" rel="stylesheet" href="/static/style/material-icons.css">
   <link type="text/css" rel="stylesheet" href="/static/materialize/materialize.min.css" media="screen,projection"/>
@@ -15,7 +18,10 @@
   <header>
     <nav class="light-blue lighten-1" role="navigation">
       <div class="nav-wrapper container">
-        <a href="/" class="brand-logo">TraefikAccessControl - {{template "title"}}</a>
+        <a href="/" class="brand-logo">
+          <img src="/static/images/logo.png">
+          TraefikAccessControl - {{template "title"}}
+        </a>
         {{if .user}}
           <a href="/logout" class="right">Logout</a>
         {{end}}
