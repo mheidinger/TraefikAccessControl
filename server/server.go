@@ -9,7 +9,6 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	ginlogrus "github.com/toorop/gin-logrus"
 	"github.com/weppos/publicsuffix-go/publicsuffix"
 
 	"github.com/gin-gonic/gin"
@@ -47,7 +46,7 @@ func NewServer(cookieName string) *Server {
 }
 
 func (s *Server) buildRoutes() {
-	s.Router.Use(ginlogrus.Logger(log.New()), gin.Recovery())
+	s.Router.Use(gin.Recovery())
 
 	s.buildCoreRoutes()
 	s.buildUIRoutes()

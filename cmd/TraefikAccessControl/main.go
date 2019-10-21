@@ -41,7 +41,7 @@ func main() {
 		log.Fatal("Abort: Failed to create site mapping repository")
 	}
 
-	_ = manager.CreateAuthManager(userRep, tokenRep)
+	authMgr := manager.CreateAuthManager(userRep, tokenRep)
 	_ = manager.CreateSiteManager(siteRep, siteMappingRep)
 	_ = manager.CreateAccessManager()
 	importExportManager := manager.CreateImportExportManager()
@@ -51,6 +51,10 @@ func main() {
 		if err != nil {
 			log.Warn("Abort: Failed to import data")
 		}
+	}
+
+	if cnt, err := authMgr.GetUserCount(); err == nil && cnt == 0 {
+		authMgr.CreateFirstUser()
 	}
 
 	srv := server.NewServer(*cookieNamePtr)

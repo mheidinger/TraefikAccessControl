@@ -70,15 +70,6 @@ func (mgr *AuthManager) CreateUser(user *models.User) (err error) {
 		return fmt.Errorf("Saving user failed")
 	}
 
-	if count, err := mgr.GetUserCount(); err == nil && count == 1 {
-		createLog.Info("Make first user an admin")
-		user.IsAdmin = true
-		err = mgr.userRep.Update(user)
-		if err != nil {
-			createLog.WithField("err", err).Error("Failed to make first user an admin")
-		}
-	}
-
 	return
 }
 
@@ -182,6 +173,17 @@ func (mgr *AuthManager) ValidateCredentials(username, password string) (user *mo
 		return nil, fmt.Errorf("Failed to validate password")
 	}
 
+	return
+}
+
+func (mgr *AuthManager) CreateFirstUser() (err error) {
+	user := &models.User{
+		Username: "admin",
+		Password: utils.RandomString(15),
+		IsAdmin:  true,
+	}
+	log.Infof("Create first user with username '%s' and password '%s'", user.Username, user.Password)
+	err = mgr.CreateUser(user)
 	return
 }
 
