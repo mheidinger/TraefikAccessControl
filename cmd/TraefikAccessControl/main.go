@@ -16,6 +16,7 @@ func main() {
 	importNamePtr := flag.String("import_name", "", "Path of an file to import")
 	forceImportPtr := flag.Bool("force_import", false, "Force the import of the given file, deletes all existing data")
 	cookieNamePtr := flag.String("cookie_name", "tac_token", "Cookie name used")
+	userHeaderNamePtr := flag.String("user_header_name", "X-TAC-User", "Header name that contains the username after successful auth")
 	portPtr := flag.Int("port", 4181, "Port on which the application will run")
 	flag.Parse()
 
@@ -57,7 +58,7 @@ func main() {
 		authMgr.CreateFirstUser()
 	}
 
-	srv := server.NewServer(*cookieNamePtr)
+	srv := server.NewServer(*cookieNamePtr, *userHeaderNamePtr)
 
 	// Start
 	log.WithField("port", *portPtr).Info("Listening on specified port")

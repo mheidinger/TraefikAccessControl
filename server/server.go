@@ -31,14 +31,16 @@ var (
 )
 
 type Server struct {
-	Router     *gin.Engine
-	cookieName string
+	Router         *gin.Engine
+	cookieName     string
+	userHeaderName string
 }
 
-func NewServer(cookieName string) *Server {
+func NewServer(cookieName, userHeaderName string) *Server {
 	s := &Server{
-		Router:     gin.New(),
-		cookieName: cookieName,
+		Router:         gin.New(),
+		cookieName:     cookieName,
+		userHeaderName: userHeaderName,
 	}
 	s.parseTemplates()
 	s.buildRoutes()
@@ -106,6 +108,9 @@ func (s *Server) accessHandler() gin.HandlerFunc {
 
 		isBrowser := strings.Contains(c.Request.UserAgent(), "Mozilla")
 		if accessGranted {
+			if user != nil {
+				c.Header("X-TAC-User", user.Username)
+			}
 			c.Status(http.StatusOK)
 		} else if isBrowser && user == nil {
 			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", &completeURLString, nil, nil))
