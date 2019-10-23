@@ -4,7 +4,7 @@
 
 #### TraefikAccessControl is a small server application providing a ForwardAuth source for Traefik and is configurable on a per user and URL basis.
 
-Login                      |  User Dashboard
+|                          |                                |
 :-------------------------:|:-------------------------------:
 ![](screenshots/login.png) |  ![](screenshots/dashboard.png)
 
