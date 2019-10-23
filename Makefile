@@ -6,7 +6,7 @@ build: $(sourcefiles)
 run: build
 	./TraefikAccessControl
 
-run-import: build
+run-import: build gen-data
 	./TraefikAccessControl -import_name tac_data.json -force_import
 
 gen-data:
