@@ -190,13 +190,17 @@ func (s *Server) loginUIHandler() gin.HandlerFunc {
 
 func (s *Server) forbiddenUIHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userInt, _ := c.Get(userContextKey)
-		user := userInt.(*models.User)
+		userInt, ok := c.Get(userContextKey)
+		var user *models.User
+		if ok && userInt != nil {
+			user = userInt.(*models.User)
+		}
 
 		c.HTML(http.StatusForbidden, "forbidden", gin.H{
-			"error":   c.Query(errorURLParam),
-			"success": c.Query(successURLParam),
-			"user":    user,
+			"error":     c.Query(errorURLParam),
+			"success":   c.Query(successURLParam),
+			"user":      user,
+			"failedUrl": c.Query(redirectURLParam),
 		})
 	}
 }

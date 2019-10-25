@@ -1,7 +1,13 @@
 {{define "title"}}Access Forbidden{{end}}
 
 {{define "body"}}
-<div>
-	<h1 class="header center orange-text">Access Forbidden</h1>
+<div class="center">
+	<h1 class="header orange-text">Access Forbidden</h1>
+	<a href="{{.failedUrl}}">
+		<button class="btn waves-effect waves-light">
+			Try again!
+			<i class="material-icons right">autorenew</i>
+		</button>
+	</a>
 </div>
 {{end}}
