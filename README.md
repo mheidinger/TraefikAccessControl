@@ -59,6 +59,9 @@ Usage of ./TraefikAccessControl:
         Header name that contains the username after successful auth (default "X-TAC-User")
 ```
 
+If at the start of TAC no user exists, a new admin user will be created.
+The credentials for this user are printed to the logs.
+
 ### Traefik configuration (version 2.0)
 
 ```

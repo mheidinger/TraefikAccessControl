@@ -15,6 +15,7 @@ gen-data:
 test:
 	go test ./...
 
-clearall:
+clean:
+	-rm TraefikAccessControl
 	-rm tac.db
 	-rm tac_data.json

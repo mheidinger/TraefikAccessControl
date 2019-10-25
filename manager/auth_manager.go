@@ -182,7 +182,7 @@ func (mgr *AuthManager) CreateFirstUser() (err error) {
 		Password: utils.RandomString(15),
 		IsAdmin:  true,
 	}
-	log.Infof("Create first user with username '%s' and password '%s'", user.Username, user.Password)
+	log.WithFields(log.Fields{"username": user.Username, "password": user.Password}).Info("Create first user")
 	err = mgr.CreateUser(user)
 	return
 }
