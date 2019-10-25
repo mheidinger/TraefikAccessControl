@@ -63,8 +63,17 @@ Usage of ./TraefikAccessControl:
 
 ```
 [http.middlewares.tac-auth.forwardAuth]
-		address = "https://your_tac_url/access"
-		authResponseHeaders = ["X-TAC-User"]
+	address = "https://your_tac_url/access"
+	authResponseHeaders = ["X-TAC-User"]
 ```
 
 This configuration will forward the header (`-user_header_name`) with the username to the requested service. 
+
+If you are deploying TAC as its own service, something like the following configuration is needed to ensure that Traefik forwards all needed headers to TAC.
+Otherwise the forwarded request will go through Traefik again to reach TAC but all `X-Forwarded-` Headers will be stripped and TAC can't function.
+```
+[entrypoints.https]
+	address = ":443"
+	[entrypoints.https.forwardedHeaders]
+		trustedIPs = ["127.0.0.1/32", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "fd00::/8"]
+```
