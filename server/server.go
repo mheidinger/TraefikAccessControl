@@ -5,6 +5,7 @@ import (
 	"TraefikAccessControl/models"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -81,6 +82,7 @@ func (s *Server) accessHandler() gin.HandlerFunc {
 		completeURL.Scheme = proto
 
 		var accessGranted = false
+		var promptBasicAuth = false
 		var user *models.User
 		var completeURLString = completeURL.String()
 
@@ -103,7 +105,7 @@ func (s *Server) accessHandler() gin.HandlerFunc {
 		} else {
 			requestLogger.Info("No auth information in request")
 
-			accessGranted, err = manager.GetAccessManager().CheckAnonymousAccess(host, path, requestLogger)
+			accessGranted, promptBasicAuth, err = manager.GetAccessManager().CheckAnonymousAccess(host, path, requestLogger)
 		}
 
 		isBrowser := strings.Contains(c.Request.UserAgent(), "Mozilla")
@@ -112,6 +114,9 @@ func (s *Server) accessHandler() gin.HandlerFunc {
 				c.Header("X-TAC-User", user.Username)
 			}
 			c.Status(http.StatusOK)
+		} else if promptBasicAuth {
+			c.Header("WWW-Authenticate", "Basic realm="+strconv.Quote("Authorization required"))
+			c.Status(http.StatusUnauthorized)
 		} else if isBrowser && user == nil {
 			c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", &completeURLString, nil, nil))
 		} else if isBrowser && user != nil {

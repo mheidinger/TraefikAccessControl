@@ -14,6 +14,12 @@
       <label for="sitePathPrefixField">Path-Prefix</label>
 		</div>
 		<div class="input-field">
+			<label id="sitePromptBasicAuthLabel">
+				<input type="checkbox" class="filled-in" id="sitePromptBasicAuthField" {{if .site.PromptBasicAuth}} checked="checked" {{end}}/>
+				<span>Prompt Basic Auth</span>
+			</label>
+		</div>
+		<div class="input-field">
 			<label id="siteAnonymousAccessLabel">
 				<input type="checkbox" class="filled-in" id="siteAnonymousAccessField" {{if .site.AnonymousAccess}} checked="checked" {{end}}/>
 				<span>Anonymous Access</span>

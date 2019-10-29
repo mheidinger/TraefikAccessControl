@@ -128,6 +128,7 @@
 					<tr>
 						<th>Host</th>
 						<th>Path-Prefix</th>
+						<th class="right-align">Prompt Basic Auth</th>
 						<th class="right-align">Anonymous Access</th>
 						<th class="right-align">Edit</th>
 						<th class="right-align">Delete</th>
@@ -138,6 +139,13 @@
 						<tr>
 							<td>{{.Host}}</td>
 							<td>{{.PathPrefix}}</td>
+							<td class="right-align">
+								{{if .PromptBasicAuth}}
+									<i class="material-icons">done</i>
+								{{else}}
+									<i class="material-icons">clear</i>
+								{{end}}
+							</td>
 							<td class="right-align">
 								{{if .AnonymousAccess}}
 									<i class="material-icons">done</i>
@@ -152,6 +160,7 @@
 					<tr>
 						<td><input type="text" id="siteHostField" placeholder="Host"></td>
 						<td><input type="text" id="sitePathPrefixField" placeholder="Path-Prefix"></td>
+						<td class="right-align"><label><input type="checkbox" class="filled-in" id="sitePromptBasicAuthField"/><span></span></label></td>
 						<td class="right-align"><label><input type="checkbox" class="filled-in" id="siteAnonymousAccessField"/><span></span></label></td>
 						<td></td>
 						<td>

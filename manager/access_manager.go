@@ -53,17 +53,14 @@ func (mgr *AccessManager) CheckAccessCredentials(host, path, username, password 
 	return
 }
 
-func (mgr *AccessManager) CheckAnonymousAccess(host, path string, requestLogger *log.Entry) (ok bool, err error) {
+func (mgr *AccessManager) CheckAnonymousAccess(host, path string, requestLogger *log.Entry) (ok, promptBasicAuth bool, err error) {
 	site, err := GetSiteManager().GetSite(host, path)
 	if err != nil {
 		requestLogger.WithField("err", err).Info("Site not found")
 		return
 	}
 
-	if site.AnonymousAccess {
-		return true, nil
-	}
-	return false, nil
+	return site.AnonymousAccess, site.PromptBasicAuth, nil
 }
 
 func (mgr *AccessManager) CheckAccess(host, path string, user *models.User, fromBasicAuth bool, requestLogger *log.Entry) (ok bool, err error) {

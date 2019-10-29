@@ -17,7 +17,7 @@ main {
 	padding-bottom: 1em;
 }
 
-#siteAnonymousAccessLabel {
+#sitePromptBasicAuthLabel, #siteAnonymousAccessLabel {
 	position: relative;
 }
 

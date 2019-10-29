@@ -5,4 +5,5 @@ type Site struct {
 	Host            string `json:"host"`
 	PathPrefix      string `json:"path_prefix"`
 	AnonymousAccess bool   `json:"anonymous_access"`
+	PromptBasicAuth bool   `json:"prompt_basic_auth"`
 }

@@ -33,8 +33,9 @@
 
 		const hostField = document.getElementById("siteHostField");
 		const pathPrefixField = document.getElementById("sitePathPrefixField");
+		const promptBasicAuthField = document.getElementById("sitePromptBasicAuthField");
 		const anonymousAccessField = document.getElementById("siteAnonymousAccessField");
-		const body = { "host": hostField.value, "path_prefix": pathPrefixField.value, "anonymous_access": anonymousAccessField.checked };
+		const body = { "host": hostField.value, "path_prefix": pathPrefixField.value, "anonymous_access": anonymousAccessField.checked, "prompt_basic_auth": promptBasicAuthField.checked };
 		sendAPIRequest("POST", "/api/site", body, "Successfully created new site", "Failed to create new site: ");
 	}
 

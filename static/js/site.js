@@ -6,8 +6,9 @@
 
     const hostField = document.getElementById("siteHostField");
     const pathPrefixField = document.getElementById("sitePathPrefixField");
+    const promptBasicAuthField = document.getElementById("sitePromptBasicAuthField");
     const anonymousAccessField = document.getElementById("siteAnonymousAccessField");
-    const body = { "id": siteID, "host": hostField.value, "path_prefix": pathPrefixField.value, "anonymous_access": anonymousAccessField.checked };
+    const body = { "id": siteID, "host": hostField.value, "path_prefix": pathPrefixField.value, "anonymous_access": anonymousAccessField.checked, "prompt_basic_auth": promptBasicAuthField.checked };
     sendAPIRequest("PUT", "/api/site", body, "Successfully changed site", "Failed to change site: ");
   }
 
