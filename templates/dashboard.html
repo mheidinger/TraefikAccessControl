@@ -4,7 +4,7 @@
 <div>
 	<h1 class="header center orange-text">Dashboard</h1>
 
-	<div class="container">
+	<div>
 		<h4 class="orange-text">Your available sites:</h4>
 		<table class="responsive-table striped">
 			<thead>
@@ -36,7 +36,7 @@
 		</table>
 	</div>
 
-	<div class="container">
+	<div>
 		<h4 class="orange-text">Your bearer tokens:</h4>
 		<table class="responsive-table striped">
 			<thead>
@@ -68,7 +68,7 @@
 		</table>
 	</div>
 
-	<div class="container">
+	<div>
 		<h4 class="orange-text">Change Password:</h4>
 		<div class="row">
 			<div class="input-field col s10">
@@ -87,7 +87,7 @@
 	{{if .user.IsAdmin}}
 		<h2 class="center orange-text">Admin Area</h2>
 
-		<div class="container">
+		<div>
 			<h4 class="orange-text">All users:</h4>
 			<table class="responsive-table striped">
 				<thead>
@@ -125,7 +125,7 @@
 			</table>
 		</div>
 
-		<div class="container">
+		<div>
 			<h4 class="orange-text">All sites:</h4>
 			<table class="responsive-table striped">
 				<thead>
@@ -134,6 +134,7 @@
 						<th>Path-Prefix</th>
 						<th class="right-align">Prompt Basic Auth</th>
 						<th class="right-align">Anonymous Access</th>
+						<th class="right-align">Config OK</th>
 						<th class="right-align">Edit</th>
 						<th class="right-align">Delete</th>
 					</tr>
@@ -157,6 +158,13 @@
 									<i class="material-icons">clear</i>
 								{{end}}
 							</td>
+							<td class="right-align">
+								{{if .ConfigOK}}
+									<i class="material-icons">done</i>
+								{{else}}
+									<i class="material-icons">clear</i>
+								{{end}}
+							</td>
 							<td class="right-align"><a href="/site/{{.ID}}"><i class="material-icons">edit</i></a></td>
 							<td class="right-align"><a class="siteDeleteButton" href="#"><i data-siteid={{.ID}} class="material-icons">delete_forever</i></a></td>
 						</tr>
@@ -167,7 +175,7 @@
 						<td class="right-align"><label><input type="checkbox" class="filled-in" id="sitePromptBasicAuthField"/><span></span></label></td>
 						<td class="right-align"><label><input type="checkbox" class="filled-in" id="siteAnonymousAccessField"/><span></span></label></td>
 						<td></td>
-						<td>
+						<td colspan="2">
 							<button class="btn waves-effect waves-light right" id="siteCreateButton">
 								Create New
 								<i class="material-icons right">add</i>

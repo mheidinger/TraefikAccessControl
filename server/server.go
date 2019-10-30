@@ -81,6 +81,12 @@ func (s *Server) accessHandler() gin.HandlerFunc {
 		}
 		completeURL.Scheme = proto
 
+		if header := c.Request.Header.Get(manager.CheckConfigHeader); header != "" {
+			c.Header(manager.CheckConfigHeader, manager.CheckConfigHeaderContent)
+			c.Status(http.StatusUnauthorized)
+			return
+		}
+
 		var accessGranted = false
 		var promptBasicAuth = false
 		var user *models.User

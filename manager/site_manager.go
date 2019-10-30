@@ -4,18 +4,27 @@ import (
 	"TraefikAccessControl/models"
 	"TraefikAccessControl/repository"
 	"fmt"
+	"net/http"
+	"net/url"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
 
 type SiteManager struct {
-	siteRep        *repository.SiteRepository
-	siteMappingRep *repository.SiteMappingRepository
-	done           chan struct{}
+	siteRep             *repository.SiteRepository
+	siteMappingRep      *repository.SiteMappingRepository
+	checkConfigInterval int
+	done                chan struct{}
 }
 
 var siteManager *SiteManager
+
+const (
+	CheckConfigHeader        = "X-TAC-Check-Config"
+	CheckConfigHeaderContent = "checked"
+)
 
 func CreateSiteManager(siteRep *repository.SiteRepository, siteMappingRep *repository.SiteMappingRepository) *SiteManager {
 	if siteManager != nil {
@@ -23,11 +32,75 @@ func CreateSiteManager(siteRep *repository.SiteRepository, siteMappingRep *repos
 	}
 
 	siteManager = &SiteManager{
-		siteRep:        siteRep,
-		siteMappingRep: siteMappingRep,
-		done:           make(chan struct{}),
+		siteRep:             siteRep,
+		siteMappingRep:      siteMappingRep,
+		checkConfigInterval: 5,
+		done:                make(chan struct{}),
 	}
+	go siteManager.checkConfigRoutine()
 	return siteManager
+}
+
+func (mgr *SiteManager) checkConfigRoutine() {
+	log.WithField("interval", mgr.checkConfigInterval).Info("Site check will run on fixed hourly interval")
+	mgr.checkAllSitesConfig()
+	ticker := time.NewTicker(time.Minute * time.Duration(mgr.checkConfigInterval))
+	for {
+		select {
+		case <-mgr.done:
+			return
+		case <-ticker.C:
+			log.Info("Check all site configs")
+			mgr.checkAllSitesConfig()
+		}
+	}
+}
+
+func (mgr *SiteManager) checkAllSitesConfig() {
+	sites, err := mgr.siteRep.GetAll()
+	if err != nil {
+		log.WithField("err", err).Error("Failed to get all sites")
+		return
+	}
+	for _, site := range sites {
+		mgr.checkSiteConfig(site)
+	}
+}
+
+func (mgr *SiteManager) checkSiteConfig(site *models.Site) {
+	requestURL, err := url.Parse("http://" + site.Host + site.PathPrefix)
+	if err != nil {
+		log.WithFields(log.Fields{"err": err, "host": site.Host, "path-prefix": site.PathPrefix}).Error("Failed to parse request url from host and pathprefix")
+		return
+	}
+
+	client := &http.Client{}
+	req, _ := http.NewRequest("GET", requestURL.String(), nil)
+	if err != nil {
+		log.WithFields(log.Fields{"err": err, "url": requestURL.String()}).Error("Failed to create request")
+	}
+	req.Header.Add(CheckConfigHeader, "site-check")
+
+	resp, err := client.Do(req)
+	var header string
+	if err != nil {
+		log.WithFields(log.Fields{"err": err, "url": requestURL.String()}).Error("Failed to send request")
+	} else {
+		header = resp.Header.Get(CheckConfigHeader)
+		resp.Body.Close()
+	}
+
+	if err == nil && header == CheckConfigHeaderContent {
+		site.ConfigOK = true
+	} else {
+		site.ConfigOK = false
+	}
+
+	err = mgr.UpdateSite(site)
+	if err != nil {
+		log.WithField("err", err).Error("Failed to update config OK status")
+		return
+	}
 }
 
 func GetSiteManager() *SiteManager {
@@ -56,6 +129,8 @@ func (mgr *SiteManager) CreateSite(site *models.Site) (err error) {
 		createLog.WithField("err", err).Error("Failed to save site")
 		return fmt.Errorf("Failed to save site")
 	}
+
+	mgr.checkSiteConfig(site)
 
 	return
 }
