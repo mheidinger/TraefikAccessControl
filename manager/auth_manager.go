@@ -12,11 +12,12 @@ import (
 )
 
 type AuthManager struct {
-	userRep     *repository.UserRepository
-	tokenRep    *repository.TokenRepository
-	tokenLength int
-	tokenExpiry int
-	done        chan struct{}
+	userRep              *repository.UserRepository
+	tokenRep             *repository.TokenRepository
+	tokenLength          int
+	tokenExpiry          int
+	tokenCleanupInterval int
+	done                 chan struct{}
 }
 
 var authManager *AuthManager
@@ -27,13 +28,30 @@ func CreateAuthManager(userRep *repository.UserRepository, tokenRep *repository.
 	}
 
 	authManager = &AuthManager{
-		userRep:     userRep,
-		tokenRep:    tokenRep,
-		tokenLength: 30,
-		tokenExpiry: 24,
-		done:        make(chan struct{}),
+		userRep:              userRep,
+		tokenRep:             tokenRep,
+		tokenLength:          30,
+		tokenExpiry:          24,
+		tokenCleanupInterval: 2,
+		done:                 make(chan struct{}),
 	}
+	go authManager.cleanupExpiredSessionsRoutine()
 	return authManager
+}
+
+func (mgr *AuthManager) cleanupExpiredSessionsRoutine() {
+	log.WithField("interval", mgr.tokenCleanupInterval).Info("Session cleaner will run on fixed hourly interval")
+	mgr.tokenRep.DeleteExpired()
+	ticker := time.NewTicker(time.Hour * time.Duration(mgr.tokenCleanupInterval))
+	for {
+		select {
+		case <-mgr.done:
+			return
+		case <-ticker.C:
+			log.Info("Cleaning expired sessions")
+			mgr.tokenRep.DeleteExpired()
+		}
+	}
 }
 
 func GetAuthManager() *AuthManager {

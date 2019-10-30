@@ -43,8 +43,8 @@ func main() {
 	}
 
 	authMgr := manager.CreateAuthManager(userRep, tokenRep)
-	_ = manager.CreateSiteManager(siteRep, siteMappingRep)
-	_ = manager.CreateAccessManager()
+	siteMgr := manager.CreateSiteManager(siteRep, siteMappingRep)
+	accessMgr := manager.CreateAccessManager()
 	importExportManager := manager.CreateImportExportManager()
 
 	if importNamePtr != nil && *importNamePtr != "" {
@@ -63,4 +63,8 @@ func main() {
 	// Start
 	log.WithField("port", *portPtr).Info("Listening on specified port")
 	log.Info(srv.Router.Run(":" + strconv.Itoa(*portPtr)))
+
+	authMgr.Close()
+	siteMgr.Close()
+	accessMgr.Close()
 }

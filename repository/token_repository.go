@@ -2,8 +2,7 @@ package repository
 
 import (
 	"TraefikAccessControl/models"
-
-	log "github.com/sirupsen/logrus"
+	"time"
 )
 
 // Add used models to enable auto migration for them
@@ -47,8 +46,12 @@ func (rep *TokenRepository) DeleteByUser(userID int) (err error) {
 }
 
 func (rep *TokenRepository) DeleteByUserName(userID int, name string) (err error) {
-	log.Info(name)
 	err = databaseConnection.Where(&models.Token{UserID: userID, Name: &name}).Delete(&models.Token{}).Error
+	return
+}
+
+func (rep *TokenRepository) DeleteExpired() (err error) {
+	err = databaseConnection.Where("expires_at < ?", time.Now().UTC()).Delete(&models.Token{}).Error
 	return
 }
 
