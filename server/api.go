@@ -16,6 +16,7 @@ func (s *Server) buildAPIRoutes() {
 	api.POST("/site", s.createSiteAPIHandler())
 	api.PUT("/site", s.updateSiteAPIHandler())
 	api.DELETE("/site", s.deleteSiteAPIHandler())
+	api.POST("/site/check", s.checkSiteAPIHandler())
 	api.POST("/bearer", s.createBearerAPIHandler())
 	api.DELETE("/bearer", s.deleteBearerAPIHandler())
 	api.POST("/mapping", s.createMappingAPIHandler())
@@ -140,7 +141,7 @@ func (s *Server) updateSiteAPIHandler() gin.HandlerFunc {
 			return
 		}
 
-		err := manager.GetSiteManager().UpdateSite(&siteIn)
+		err := manager.GetSiteManager().UpdateSite(&siteIn, true)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -165,6 +166,35 @@ func (s *Server) deleteSiteAPIHandler() gin.HandlerFunc {
 			return
 		}
 		err := manager.GetSiteManager().DeleteSite(siteIn.ID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{})
+	}
+}
+
+func (s *Server) checkSiteAPIHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userInt, _ := c.Get(userContextKey)
+		user := userInt.(*models.User)
+
+		if !user.IsAdmin {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Not authorized to delete site"})
+			return
+		}
+		var siteIn models.Site
+		if err := c.ShouldBindJSON(&siteIn); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		site, err := manager.GetSiteManager().GetSiteByID(siteIn.ID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		err = manager.GetSiteManager().CheckSiteConfig(site)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

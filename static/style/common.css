@@ -25,13 +25,21 @@ main {
 	position: relative;
 }
 
-#errorCard, #successCard {
+#infoCard {
   -webkit-animation: fadeOut 1.5s forwards;
   -webkit-animation-iteration-count: 1;
   -webkit-animation-delay: 5s;
   animation: fadeOut 1.5s forwards;
   animation-iteration-count: 1;
   animation-delay: 5s;
+}
+
+.configIndicator {
+  margin-left: 0.5em;
+}
+
+#siteRefreshButton {
+  margin-left: 2em;
 }
 
 @-webkit-keyframes fadeOut {

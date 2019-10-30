@@ -13,6 +13,17 @@
 			<input value="{{.site.PathPrefix}}" id="sitePathPrefixField" type="text">
       <label for="sitePathPrefixField">Path-Prefix</label>
 		</div>
+		<div class="valign-wrapper">
+			<b>Config OK:</b> 
+			{{if .site.ConfigOK}}
+				<i class="material-icons configIndicator">done</i>
+			{{else}}
+				<i class="material-icons configIndicator">clear</i>
+			{{end}}
+			<button class="btn-floating waves-effect waves-light right-align" id="siteRefreshConfigOKButton">
+				<i class="material-icons right">refresh</i>
+			</button>
+		</div>
 		<div class="input-field">
 			<label id="sitePromptBasicAuthLabel">
 				<input type="checkbox" class="filled-in" id="sitePromptBasicAuthField" {{if .site.PromptBasicAuth}} checked="checked" {{end}}/>

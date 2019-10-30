@@ -34,7 +34,7 @@ func CreateSiteManager(siteRep *repository.SiteRepository, siteMappingRep *repos
 	siteManager = &SiteManager{
 		siteRep:             siteRep,
 		siteMappingRep:      siteMappingRep,
-		checkConfigInterval: 5,
+		checkConfigInterval: 1,
 		done:                make(chan struct{}),
 	}
 	go siteManager.checkConfigRoutine()
@@ -44,7 +44,7 @@ func CreateSiteManager(siteRep *repository.SiteRepository, siteMappingRep *repos
 func (mgr *SiteManager) checkConfigRoutine() {
 	log.WithField("interval", mgr.checkConfigInterval).Info("Site check will run on fixed hourly interval")
 	mgr.checkAllSitesConfig()
-	ticker := time.NewTicker(time.Minute * time.Duration(mgr.checkConfigInterval))
+	ticker := time.NewTicker(time.Hour * time.Duration(mgr.checkConfigInterval))
 	for {
 		select {
 		case <-mgr.done:
@@ -63,11 +63,11 @@ func (mgr *SiteManager) checkAllSitesConfig() {
 		return
 	}
 	for _, site := range sites {
-		mgr.checkSiteConfig(site)
+		mgr.CheckSiteConfig(site)
 	}
 }
 
-func (mgr *SiteManager) checkSiteConfig(site *models.Site) {
+func (mgr *SiteManager) CheckSiteConfig(site *models.Site) (err error) {
 	requestURL, err := url.Parse("http://" + site.Host + site.PathPrefix)
 	if err != nil {
 		log.WithFields(log.Fields{"err": err, "host": site.Host, "path-prefix": site.PathPrefix}).Error("Failed to parse request url from host and pathprefix")
@@ -96,11 +96,13 @@ func (mgr *SiteManager) checkSiteConfig(site *models.Site) {
 		site.ConfigOK = false
 	}
 
-	err = mgr.UpdateSite(site)
+	err = mgr.UpdateSite(site, false)
 	if err != nil {
 		log.WithField("err", err).Error("Failed to update config OK status")
 		return
 	}
+
+	return
 }
 
 func GetSiteManager() *SiteManager {
@@ -130,7 +132,7 @@ func (mgr *SiteManager) CreateSite(site *models.Site) (err error) {
 		return fmt.Errorf("Failed to save site")
 	}
 
-	mgr.checkSiteConfig(site)
+	mgr.CheckSiteConfig(site)
 
 	return
 }
@@ -164,11 +166,17 @@ func (mgr *SiteManager) GetAnonymousSites() (sites []*models.Site, err error) {
 	return mgr.siteRep.GetAnonymous()
 }
 
-func (mgr *SiteManager) UpdateSite(site *models.Site) (err error) {
+func (mgr *SiteManager) UpdateSite(site *models.Site, checkSiteConfig bool) (err error) {
 	if !strings.HasPrefix(site.PathPrefix, "/") {
 		site.PathPrefix = "/" + site.PathPrefix
 	}
-	return mgr.siteRep.Update(site)
+	err = mgr.siteRep.Update(site)
+
+	if checkSiteConfig {
+		mgr.CheckSiteConfig(site)
+	}
+
+	return err
 }
 
 func (mgr *SiteManager) DeleteSite(siteID int) (err error) {

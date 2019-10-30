@@ -18,6 +18,15 @@
   const editSiteButton = document.getElementById("siteEditButton");
   editSiteButton.onclick = onEditSite;
 
+  function onRefreshConfigOK(event) {
+    event.preventDefault();
+    const body = { "id": siteID };
+    sendAPIRequest("POST", "/api/site/check", body, "Successfully updated config status", "Failed to update config status: ");
+  }
+
+  const refreshConfigOKButton = document.getElementById("siteRefreshConfigOKButton");
+  refreshConfigOKButton.onclick = onRefreshConfigOK;
+
   function onCreateMapping(event) {
     event.preventDefault();
 
