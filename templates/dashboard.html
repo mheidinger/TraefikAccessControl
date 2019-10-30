@@ -16,6 +16,7 @@
 			</thead>
 			<tbody>
 				{{range .siteMappings}}
+				{{if and (.Site) (.SiteMapping) }}
 					<tr>
 						<td>{{.Site.Host}}</td>
 						<td>{{.Site.PathPrefix}}</td>
@@ -27,6 +28,9 @@
 							{{end}}
 						</td>
 					</tr>
+				{{else}}
+					<tr class="emptyRow"></tr>
+				{{end}}
 				{{end}}
 			</tbody>
 		</table>

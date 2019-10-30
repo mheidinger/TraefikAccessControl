@@ -17,6 +17,10 @@ main {
 	padding-bottom: 1em;
 }
 
+.emptyRow {
+  height: 1em;
+}
+
 #sitePromptBasicAuthLabel, #siteAnonymousAccessLabel {
 	position: relative;
 }

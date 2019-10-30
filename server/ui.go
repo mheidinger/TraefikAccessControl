@@ -45,10 +45,16 @@ func (s *Server) dashboardUIHandler() gin.HandlerFunc {
 			return
 		}
 
+		anonymousSites, err := manager.GetSiteManager().GetAnonymousSites()
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "dashboard", gin.H{"error": errorServer})
+			return
+		}
+
 		siteMappings := make([]struct {
 			SiteMapping *models.SiteMapping
 			Site        *models.Site
-		}, len(rawSiteMappings))
+		}, len(rawSiteMappings)+len(anonymousSites)+1)
 
 		for it, rawSiteMapping := range rawSiteMappings {
 			site, err := manager.GetSiteManager().GetSiteByID(rawSiteMapping.SiteID)
@@ -57,6 +63,12 @@ func (s *Server) dashboardUIHandler() gin.HandlerFunc {
 			}
 			siteMappings[it].SiteMapping = rawSiteMapping
 			siteMappings[it].Site = site
+		}
+
+		for it, anonymousSite := range anonymousSites {
+			mappingsIt := len(rawSiteMappings) + it + 1
+			siteMappings[mappingsIt].SiteMapping = &models.SiteMapping{}
+			siteMappings[mappingsIt].Site = anonymousSite
 		}
 
 		tokens, err := manager.GetAuthManager().GetBearerTokens(user)

@@ -34,6 +34,11 @@ func (rep *SiteRepository) GetByID(siteID int) (site *models.Site, err error) {
 	return
 }
 
+func (rep *SiteRepository) GetAnonymous() (sites []*models.Site, err error) {
+	err = databaseConnection.Where(&models.Site{AnonymousAccess: true}).Order("host, path_prefix").Find(&sites).Error
+	return
+}
+
 func (rep *SiteRepository) GetAll() (sites []*models.Site, err error) {
 	err = databaseConnection.Order("host, path_prefix").Find(&sites).Error
 	return

@@ -85,6 +85,10 @@ func (mgr *SiteManager) GetAllSites() (sites []*models.Site, err error) {
 	return mgr.siteRep.GetAll()
 }
 
+func (mgr *SiteManager) GetAnonymousSites() (sites []*models.Site, err error) {
+	return mgr.siteRep.GetAnonymous()
+}
+
 func (mgr *SiteManager) UpdateSite(site *models.Site) (err error) {
 	if !strings.HasPrefix(site.PathPrefix, "/") {
 		site.PathPrefix = "/" + site.PathPrefix
