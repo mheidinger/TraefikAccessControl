@@ -37,7 +37,6 @@ func (mgr *AccessManager) CheckAccessToken(host, path, tokenString string, fromB
 	user, err = GetAuthManager().ValidateTokenString(tokenString, fromBearer)
 	if err != nil {
 		requestLogger.WithField("err", err).Info("Token not valid")
-		return
 	}
 	ok, err = mgr.CheckAccess(host, path, user, false, requestLogger)
 	return
@@ -47,7 +46,6 @@ func (mgr *AccessManager) CheckAccessCredentials(host, path, username, password 
 	user, err = GetAuthManager().ValidateCredentials(username, password)
 	if err != nil {
 		requestLogger.WithField("err", err).Info("Credentials not valid")
-		return
 	}
 	ok, err = mgr.CheckAccess(host, path, user, fromBasicAuth, requestLogger)
 	return
@@ -72,6 +70,10 @@ func (mgr *AccessManager) CheckAccess(host, path string, user *models.User, from
 
 	if site.AnonymousAccess {
 		return true, nil
+	}
+
+	if user == nil {
+		return false, err
 	}
 
 	siteMapping, err := GetSiteManager().GetSiteMapping(user, site)
