@@ -35,14 +35,6 @@ function sendAPIRequest(method, path, body, success, error) {
 	});
 }
 
-function fetchResponseToPromise(response) {
-	if (response.ok) {
-		return response.json();
-	} else {
-		throw Error(response.json());
-	}
-}
-
 function reloadSuccess(message) {
 	let url = new URL(location.href);
 	url.searchParams.delete("error");
