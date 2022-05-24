@@ -7,8 +7,8 @@ require (
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/freecloudio/server v0.0.0-20210722164937-caf6f44f945c
-	github.com/gin-contrib/multitemplate v0.0.0-20190914010127-bba2ccfe37ec
-	github.com/gin-gonic/gin v1.6.3
+	github.com/gin-contrib/multitemplate v0.0.0-20220524002413-658d6de061b5
+	github.com/gin-gonic/gin v1.7.7
 	github.com/go-openapi/strfmt v0.19.3 // indirect
 	github.com/go-openapi/swag v0.19.5 // indirect
 	github.com/jinzhu/gorm v1.9.11
