@@ -3,7 +3,7 @@ module TraefikAccessControl
 go 1.12
 
 require (
-	github.com/containous/traefik v1.7.18
+	github.com/containous/traefik v1.7.34
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/freecloudio/server v0.0.0-20210722164937-caf6f44f945c
