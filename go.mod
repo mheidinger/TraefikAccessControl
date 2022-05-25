@@ -11,7 +11,7 @@ require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-openapi/strfmt v0.19.3 // indirect
 	github.com/go-openapi/swag v0.19.5 // indirect
-	github.com/jinzhu/gorm v1.9.11
+	github.com/jinzhu/gorm v1.9.16
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/mholt/archiver v3.1.1+incompatible // indirect
