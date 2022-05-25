@@ -1,3 +1,4 @@
 TraefikAccessControl
 *.db
 tac_data.json
+.vscode/
