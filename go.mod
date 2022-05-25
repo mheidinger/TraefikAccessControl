@@ -21,6 +21,6 @@ require (
 	github.com/toorop/gin-logrus v0.0.0-20190701131413-6c374ad36b67
 	github.com/weppos/publicsuffix-go v0.15.0
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
-	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
+	golang.org/x/crypto v0.0.0-20220518034528-6f7dac969898
 	gopkg.in/clog.v1 v1.2.0
 )
