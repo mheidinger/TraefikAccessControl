@@ -3,7 +3,7 @@ module TraefikAccessControl
 go 1.19
 
 require (
-	github.com/gin-contrib/multitemplate v0.0.0-20220705015713-e21a0ba39de3
+	github.com/gin-contrib/multitemplate v0.0.0-20220829131020-8c2a8441bc2b
 	github.com/gin-gonic/gin v1.8.1
 	github.com/jinzhu/gorm v1.9.16
 	github.com/pkg/errors v0.9.1

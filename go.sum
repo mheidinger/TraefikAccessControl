@@ -14,6 +14,8 @@ github.com/gin-contrib/multitemplate v0.0.0-20220606235416-8e12065b5cb8 h1:aMshF
 github.com/gin-contrib/multitemplate v0.0.0-20220606235416-8e12065b5cb8/go.mod h1:+p8BDU1zMNBRv3q8DAGAOYkss1Bc4LyUA6X+lMMC8gM=
 github.com/gin-contrib/multitemplate v0.0.0-20220705015713-e21a0ba39de3 h1:DuxfK5dG4dCWzKS4Fy3K/Ph/GFgaDcBj5kZkCZCx/IE=
 github.com/gin-contrib/multitemplate v0.0.0-20220705015713-e21a0ba39de3/go.mod h1:XLLtIXoP9+9zGcEDc7gAGV3AksGPO+vzv4kXHMJSdU0=
+github.com/gin-contrib/multitemplate v0.0.0-20220829131020-8c2a8441bc2b h1:WMas4AhGwZLRBAYGikjEzx02gk5SbAn3xbbxhnGrgao=
+github.com/gin-contrib/multitemplate v0.0.0-20220829131020-8c2a8441bc2b/go.mod h1:XLLtIXoP9+9zGcEDc7gAGV3AksGPO+vzv4kXHMJSdU0=
 github.com/gin-contrib/sse v0.1.0 h1:Y/yl/+YNO8GZSjAhjMsSuLt29uWRFHdHYUb5lYOV9qE=
 github.com/gin-contrib/sse v0.1.0/go.mod h1:RHrZQHXnP2xjPF+u1gW/2HnVO7nvIa9PG3Gm+fLHvGI=
 github.com/gin-gonic/gin v1.7.7 h1:3DoBmSbJbZAWqXJC3SLjAPfutPJJRN1U5pALB7EeTTs=
