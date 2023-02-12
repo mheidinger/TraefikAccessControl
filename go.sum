@@ -16,6 +16,8 @@ github.com/gin-contrib/multitemplate v0.0.0-20220705015713-e21a0ba39de3 h1:DuxfK
 github.com/gin-contrib/multitemplate v0.0.0-20220705015713-e21a0ba39de3/go.mod h1:XLLtIXoP9+9zGcEDc7gAGV3AksGPO+vzv4kXHMJSdU0=
 github.com/gin-contrib/multitemplate v0.0.0-20220829131020-8c2a8441bc2b h1:WMas4AhGwZLRBAYGikjEzx02gk5SbAn3xbbxhnGrgao=
 github.com/gin-contrib/multitemplate v0.0.0-20220829131020-8c2a8441bc2b/go.mod h1:XLLtIXoP9+9zGcEDc7gAGV3AksGPO+vzv4kXHMJSdU0=
+github.com/gin-contrib/multitemplate v0.0.0-20230212012517-45920c92c271 h1:s+boMV47gwTyff2PL+k6V33edJpp+K5y3QPzZlRhno8=
+github.com/gin-contrib/multitemplate v0.0.0-20230212012517-45920c92c271/go.mod h1:XLLtIXoP9+9zGcEDc7gAGV3AksGPO+vzv4kXHMJSdU0=
 github.com/gin-contrib/sse v0.1.0 h1:Y/yl/+YNO8GZSjAhjMsSuLt29uWRFHdHYUb5lYOV9qE=
 github.com/gin-contrib/sse v0.1.0/go.mod h1:RHrZQHXnP2xjPF+u1gW/2HnVO7nvIa9PG3Gm+fLHvGI=
 github.com/gin-gonic/gin v1.7.7 h1:3DoBmSbJbZAWqXJC3SLjAPfutPJJRN1U5pALB7EeTTs=
