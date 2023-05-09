@@ -8,7 +8,7 @@ RUN go mod download
 COPY . .
 RUN go build -ldflags "-linkmode external -extldflags -static" -o TraefikAccessControl ./cmd/TraefikAccessControl
 
-FROM alpine:3.17
+FROM alpine:3.18
 
 WORKDIR /app
 COPY --from=builder /build/TraefikAccessControl .
