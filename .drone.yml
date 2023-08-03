@@ -1,0 +1,19 @@
+kind: pipeline
+name: default
+
+steps:
+- name: push-public-registry
+  image: plugins/docker
+  settings:
+    repo: ghcr.io/mheidinger/TraefikAccessControl
+    registry: ghcr.io
+    tags:
+      - latest
+      - ${DRONE_TAG}
+    username:
+      from_secret: github_username
+    password:
+      from_secret: github_password
+  when:
+    event:
+    - tag
