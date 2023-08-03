@@ -2,6 +2,13 @@ kind: pipeline
 name: default
 
 steps:
+- name: Build and Test
+  image: golang:1.19-alpine
+  commands:
+  - go mod download
+  - go build ./cmd/TraefikAccessControl
+  - go test ./...
+
 - name: push-public-registry
   image: plugins/docker
   settings:
