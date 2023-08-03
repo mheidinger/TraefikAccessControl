@@ -7,7 +7,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/jinzhu/gorm v1.9.16
 	github.com/pkg/errors v0.9.1
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/weppos/publicsuffix-go v0.30.1
 	golang.org/x/crypto v0.11.0
 )
