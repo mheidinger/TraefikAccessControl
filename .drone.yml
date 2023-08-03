@@ -3,7 +3,7 @@ name: default
 
 steps:
 - name: Build and Test
-  image: golang:1.19-alpine
+  image: golang:1.19
   commands:
   - go mod download
   - go build ./cmd/TraefikAccessControl
