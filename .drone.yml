@@ -12,7 +12,7 @@ steps:
 - name: push-public-registry
   image: plugins/docker
   settings:
-    repo: ghcr.io/mheidinger/TraefikAccessControl
+    repo: ghcr.io/mheidinger/traefik-access-control
     registry: ghcr.io
     tags:
       - latest
