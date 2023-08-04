@@ -12,7 +12,7 @@
 
 ### Docker
 
-Docker images are available on [Docker Hub](https://hub.docker.com/r/mheidinger/traefik-access-control).
+Docker images are available on [GHCR](https://github.com/users/mheidinger/packages/container/package/traefik-access-control).
 
 The default database path inside the docker container is `/app/tac.db`.
 
