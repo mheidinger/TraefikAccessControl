@@ -17,6 +17,7 @@ func (s *Server) parseTemplates() {
 	r.AddFromFiles("login", "templates/base.html", "templates/login.html")
 	r.AddFromFiles("site", "templates/base.html", "templates/site.html")
 	r.AddFromFiles("dashboard", "templates/base.html", "templates/dashboard.html")
+	r.AddFromFiles("admin", "templates/base.html", "templates/admin.html")
 	r.AddFromFiles("forbidden", "templates/base.html", "templates/forbidden.html")
 	r.AddFromFiles("notfound", "templates/base.html", "templates/notfound.html")
 	s.Router.HTMLRender = r
@@ -24,6 +25,7 @@ func (s *Server) parseTemplates() {
 
 func (s *Server) buildUIRoutes() {
 	s.Router.GET("/", s.fillUserFromCookie(), s.userMustBeValid(false, false), s.dashboardUIHandler())
+	s.Router.GET("/admin", s.fillUserFromCookie(), s.userMustBeValid(false, true), s.adminUIHandler())
 	s.Router.GET("/site/:id", s.fillUserFromCookie(), s.userMustBeValid(false, true), s.siteUIHandler())
 	s.Router.GET("/login", s.fillUserFromCookie(), s.loginUIHandler())
 	s.Router.GET("/forbidden", s.fillUserFromCookie(), s.forbiddenUIHandler())
@@ -78,26 +80,43 @@ func (s *Server) dashboardUIHandler() gin.HandlerFunc {
 			}
 		}
 
-		users, err := manager.GetAuthManager().GetAllUsers()
-		if err != nil {
-			c.HTML(http.StatusInternalServerError, "dashboard", gin.H{"error": errorServer})
-			return
-		}
-
-		sites, err := manager.GetSiteManager().GetAllSites()
-		if err != nil {
-			c.HTML(http.StatusInternalServerError, "dashboard", gin.H{"error": errorServer})
-			return
-		}
-
 		c.HTML(http.StatusOK, "dashboard", gin.H{
 			"error":        c.Query(errorURLParam),
 			"success":      c.Query(successURLParam),
 			"user":         user,
 			"siteMappings": siteMappings,
 			"tokens":       tokens,
-			"users":        users,
-			"sites":        sites,
+		})
+	}
+}
+
+func (s *Server) adminUIHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userInt, _ := c.Get(userContextKey)
+		user, ok := userInt.(*models.User)
+		if !ok {
+			c.HTML(http.StatusInternalServerError, "admin", gin.H{"error": errorServer})
+			return
+		}
+
+		users, err := manager.GetAuthManager().GetAllUsers()
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "admin", gin.H{"error": errorServer})
+			return
+		}
+
+		sites, err := manager.GetSiteManager().GetAllSites()
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "admin", gin.H{"error": errorServer})
+			return
+		}
+
+		c.HTML(http.StatusOK, "admin", gin.H{
+			"error":   c.Query(errorURLParam),
+			"success": c.Query(successURLParam),
+			"user":    user,
+			"users":   users,
+			"sites":   sites,
 		})
 	}
 }

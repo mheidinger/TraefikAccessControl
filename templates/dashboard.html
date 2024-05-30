@@ -17,19 +17,19 @@
 			<tbody>
 				{{range .siteMappings}}
 				{{if and (.Site) (.SiteMapping) }}
-					<tr>
-						<td>{{.Site.Host}}</td>
-						<td>{{.Site.PathPrefix}}</td>
-						<td class="right-align">
-							{{if .SiteMapping.BasicAuthAllowed}}
-								<i class="material-icons">done</i>
-							{{else}}
-								<i class="material-icons">clear</i>
-							{{end}}
-						</td>
-					</tr>
+				<tr>
+					<td>{{.Site.Host}}</td>
+					<td>{{.Site.PathPrefix}}</td>
+					<td class="right-align">
+						{{if .SiteMapping.BasicAuthAllowed}}
+						<i class="material-icons">done</i>
+						{{else}}
+						<i class="material-icons">clear</i>
+						{{end}}
+					</td>
+				</tr>
 				{{else}}
-					<tr class="emptyRow"></tr>
+				<tr class="emptyRow"></tr>
 				{{end}}
 				{{end}}
 			</tbody>
@@ -48,11 +48,12 @@
 			</thead>
 			<tbody>
 				{{range .tokens}}
-					<tr>
-						<td>{{.Name}}</td>
-						<td>{{.Token}}</td>
-						<td class="right-align"><a class="bearerDeleteButton" href="#"><i data-tokenname="{{.Name}}" class="material-icons">delete_forever</i></a></td>
-					</tr>
+				<tr>
+					<td>{{.Name}}</td>
+					<td>{{.Token}}</td>
+					<td class="right-align"><a class="bearerDeleteButton" href="#"><i data-tokenname="{{.Name}}"
+								class="material-icons">delete_forever</i></a></td>
+				</tr>
 				{{end}}
 				<tr>
 					<td><input type="text" id="bearerNameField" placeholder="Name"></td>
@@ -83,114 +84,5 @@
 	</div>
 
 	<script type="text/javascript" src="/static/js/dashboard.js"></script>
-
-	{{if .user.IsAdmin}}
-		<h2 class="center orange-text">Admin Area</h2>
-
-		<div>
-			<h4 class="orange-text">All users:</h4>
-			<table class="responsive-table striped">
-				<thead>
-					<tr>
-						<th>Username</th>
-						<th class="right-align">Is Admin</th>
-						<th class="right-align">Delete</th>
-					</tr>
-				</thead>
-				<tbody>
-					{{range .users}}
-						<tr>
-							<td>{{.Username}}</td>
-							<td class="right-align">
-								{{if .IsAdmin}}
-									<i class="material-icons">done</i>
-								{{else}}
-									<i class="material-icons">clear</i>
-								{{end}}
-							</td>
-							<td class="right-align"><a class="userDeleteButton" href="#"><i data-userid={{.ID}} class="material-icons">delete_forever</i></a></td>
-						</tr>
-					{{end}}
-					<tr>
-						<td><input type="text" id="userNameField" placeholder="Username"><input type="password" id="userPasswordField" placeholder="Password"></td>
-						<td class="right-align"><label><input type="checkbox" class="filled-in" id="userAdminField"/><span></span></label></td>
-						<td>
-							<button class="btn waves-effect waves-light right" id="userCreateButton">
-								Create New
-								<i class="material-icons right">add</i>
-							</button>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-
-		<div>
-			<h4 class="orange-text">All sites:</h4>
-			<table class="responsive-table striped">
-				<thead>
-					<tr>
-						<th>Host</th>
-						<th>Path-Prefix</th>
-						<th class="right-align">Prompt Basic Auth</th>
-						<th class="right-align">Anonymous Access</th>
-						<th class="right-align">Config OK</th>
-						<th class="right-align">Edit</th>
-						<th class="right-align">Delete</th>
-					</tr>
-				</thead>
-				<tbody>
-					{{range .sites}}
-						<tr>
-							<td>{{.Host}}</td>
-							<td>{{.PathPrefix}}</td>
-							<td class="right-align">
-								{{if .PromptBasicAuth}}
-									<i class="material-icons">done</i>
-								{{else}}
-									<i class="material-icons">clear</i>
-								{{end}}
-							</td>
-							<td class="right-align">
-								{{if .AnonymousAccess}}
-									<i class="material-icons">done</i>
-								{{else}}
-									<i class="material-icons">clear</i>
-								{{end}}
-							</td>
-							<td class="right-align">
-								{{if .ConfigOK}}
-									<i class="material-icons">done</i>
-								{{else}}
-									<i class="material-icons">clear</i>
-								{{end}}
-							</td>
-							<td class="right-align"><a href="/site/{{.ID}}"><i class="material-icons">edit</i></a></td>
-							<td class="right-align"><a class="siteDeleteButton" href="#"><i data-siteid={{.ID}} class="material-icons">delete_forever</i></a></td>
-						</tr>
-					{{end}}
-					<tr>
-						<td><input type="text" id="siteHostField" placeholder="Host"></td>
-						<td><input type="text" id="sitePathPrefixField" placeholder="Path-Prefix"></td>
-						<td class="right-align"><label><input type="checkbox" class="filled-in" id="sitePromptBasicAuthField"/><span></span></label></td>
-						<td class="right-align"><label><input type="checkbox" class="filled-in" id="siteAnonymousAccessField"/><span></span></label></td>
-						<td></td>
-						<td colspan="2">
-							<button class="btn waves-effect waves-light right" id="siteCreateButton">
-								Create New
-								<i class="material-icons right">add</i>
-							</button>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			<p>
-				If the config for a site is not OK, most probably the Traefik configuration is not set properly.
-				More information about this can be found in the <a href="https://github.com/mheidinger/TraefikAccessControl/blob/master/README.md">readme</a>.
-			</p>
-		</div>
-
-		<script type="text/javascript" src="/static/js/dashboard_admin.js"></script>
-	{{end}}
 </div>
 {{end}}

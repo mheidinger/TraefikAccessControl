@@ -1,72 +1,81 @@
 <!doctype html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>TAC - {{template "title"}}</title>
- 
-  <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon"/>
-  <link rel="shortcut icon" href="/static/images/favicon.ico" type="image/x-icon"/>
 
-  <link type="text/css" rel="stylesheet" href="/static/style/material-icons.css">
-  <link type="text/css" rel="stylesheet" href="/static/materialize/materialize.min.css" media="screen,projection"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link type="text/css" rel="stylesheet" href="/static/style/common.css">
+  <head>
+    <meta charset="utf-8">
+    <title>TAC - {{template "title"}}</title>
 
-  <script type="text/javascript" src="/static/js/common.js"></script> <!-- Only contains helper functions -->
-</head>
-<body>
-  <header>
-    <nav class="light-blue lighten-1" role="navigation">
-      <div class="nav-wrapper container">
-        <a href="/" class="brand-logo">
-          <img src="/static/images/logo.png">
-          TraefikAccessControl - {{template "title"}}
-        </a>
-        {{if .user}}
-          <a href="/logout" class="right">Logout</a>
+    <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="/static/images/favicon.ico" type="image/x-icon" />
+
+    <link type="text/css" rel="stylesheet" href="/static/style/material-icons.css">
+    <link type="text/css" rel="stylesheet" href="/static/materialize/materialize.min.css" media="screen,projection" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link type="text/css" rel="stylesheet" href="/static/style/common.css">
+
+    <script type="text/javascript" src="/static/js/common.js"></script> <!-- Only contains helper functions -->
+  </head>
+
+  <body>
+    <header>
+      <nav class="light-blue lighten-1" role="navigation">
+        <div class="nav-wrapper container">
+          <a href="/" class="brand-logo">
+            <img src="/static/images/logo.png">
+            TraefikAccessControl - {{template "title"}}
+          </a>
+          {{if .user}}
+          <div class="right">
+            {{if .user.IsAdmin}}
+            <a href="/admin">Admin Area</a>
+            |
+            {{end}}
+            <a href="/logout">Logout</a>
+            {{end}}
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <div class="row">
+        <div class="col s2"></div>
+
+        <div class="col s8">
+          {{template "body" .}}
+        </div>
+
+        {{if .error}}
+        <div class="col s2">
+          <div class="card red darken-1" id="infoCard">
+            <div class="card-content white-text">
+              <span class="card-title">Error</span>
+              <p>{{.error}}</p>
+            </div>
+          </div>
+        </div>
+        {{end}}
+
+        {{if .success}}
+        <div class="col s2">
+          <div class="card green darken-1" id="infoCard">
+            <div class="card-content white-text">
+              <span class="card-title">Success</span>
+              <p>{{.success}}</p>
+            </div>
+          </div>
+        </div>
         {{end}}
       </div>
-    </nav>
-  </header>
+    </main>
 
-  <main>
-    <div class="row">
-      <div class="col s2"></div>
-
-      <div class="col s8">
-        {{template "body" .}}
+    <footer class="page-footer orange">
+      <div class="container">
+        Made by <a class="orange-text text-lighten-3" href="https://max-heidinger.de">Max Heidinger</a>
       </div>
+    </footer>
 
-      {{if .error}}
-      <div class="col s2">
-        <div class="card red darken-1" id="infoCard">
-          <div class="card-content white-text">
-            <span class="card-title">Error</span>
-            <p>{{.error}}</p>
-          </div>
-        </div>
-      </div>
-      {{end}}
+    <script type="text/javascript" src="/static/materialize/materialize.min.js"></script>
+  </body>
 
-      {{if .success}}
-      <div class="col s2">
-        <div class="card green darken-1" id="infoCard">
-          <div class="card-content white-text">
-            <span class="card-title">Success</span>
-            <p>{{.success}}</p>
-          </div>
-        </div>
-      </div>
-      {{end}}
-    </div>
-  </main>
-
-  <footer class="page-footer orange">
-    <div class="container">
-      Made by <a class="orange-text text-lighten-3" href="https://max-heidinger.de">Max Heidinger</a>
-    </div>
-  </footer>
-
-  <script type="text/javascript" src="/static/materialize/materialize.min.js"></script>
-</body>
 </html>

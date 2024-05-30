@@ -1,9 +1,10 @@
 package main
 
 import (
-	"TraefikAccessControl/models"
 	"encoding/json"
-	"io/ioutil"
+	"os"
+
+	"TraefikAccessControl/models"
 )
 
 func main() {
@@ -20,5 +21,5 @@ func main() {
 
 	jsonB, _ := json.MarshalIndent(importExport, "", "  ")
 
-	ioutil.WriteFile("tac_data.json", jsonB, 0644)
+	os.WriteFile("tac_data.json", jsonB, 0644)
 }
