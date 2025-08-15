@@ -65,7 +65,9 @@ func (mgr *SiteManager) checkAllSitesConfig() {
 	}
 	for _, site := range sites {
 		checkErr := mgr.CheckSiteConfig(site)
-		log.WithError(checkErr).WithField("site", site.Host).Warn("Failed to check site config")
+		if checkErr != nil {
+			log.WithError(checkErr).WithField("site", site.Host).Warn("Failed to check site config")
+		}
 	}
 }
 
@@ -179,7 +181,9 @@ func (mgr *SiteManager) UpdateSite(site *models.Site, checkSiteConfig bool) (err
 
 	if checkSiteConfig {
 		checkErr := mgr.CheckSiteConfig(site)
-		log.WithError(checkErr).WithField("site", site.Host).Warn("Failed to check site config after update")
+		if checkErr != nil {
+			log.WithError(checkErr).WithField("site", site.Host).Warn("Failed to check site config after update")
+		}
 	}
 
 	return err

@@ -44,7 +44,9 @@ func NewServer(cookieName, userHeaderName string, externalUrlStr *string) *Serve
 	if externalUrlStr != nil {
 		var err error
 		externalUrl, err = url.Parse(*externalUrlStr)
-		log.WithField("external_url", externalUrlStr).WithError(err).Warn("Could not parse external URL, using request URL")
+		if err != nil {
+			log.WithField("external_url", externalUrlStr).WithError(err).Warn("Could not parse external URL, using request URL")
+		}
 	}
 
 	s := &Server{
