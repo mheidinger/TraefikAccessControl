@@ -10,7 +10,52 @@ import (
 )
 
 // Render type
-type Render map[string]*template.Template
+type (
+	Render          map[string]*template.Template
+	TemplateOptions struct {
+		LeftDelimiter  string
+		RightDelimiter string
+	}
+)
+
+type TemplateOption func(*TemplateOptions)
+
+func WithLeftDelimiter(delim string) TemplateOption {
+	return func(t *TemplateOptions) {
+		t.LeftDelimiter = delim
+	}
+}
+
+func WithRightDelimiter(delim string) TemplateOption {
+	return func(t *TemplateOptions) {
+		t.RightDelimiter = delim
+	}
+}
+
+func Delims(leftDelim, rightDelim string) TemplateOption {
+	return func(t *TemplateOptions) {
+		WithLeftDelimiter(leftDelim)(t)
+		WithRightDelimiter(rightDelim)(t)
+	}
+}
+
+func NewTemplateOptions(opts ...TemplateOption) *TemplateOptions {
+	const (
+		defaultLeftDelim  = "{{"
+		defaultRightDelim = "}}"
+	)
+
+	t := &TemplateOptions{
+		LeftDelimiter:  defaultLeftDelim,
+		RightDelimiter: defaultRightDelim,
+	}
+
+	for _, opt := range opts {
+		opt(t)
+	}
+
+	return t
+}
 
 var (
 	_ render.HTMLRender = Render{}
@@ -57,6 +102,14 @@ func (r Render) AddFromFS(name string, fsys fs.FS, files ...string) *template.Te
 	return tmpl
 }
 
+// AddFromFSFuncs supply add template from fs.FS (e.g. embed.FS) with callback func
+func (r Render) AddFromFSFuncs(name string, funcMap template.FuncMap, fsys fs.FS, files ...string) *template.Template {
+	tname := filepath.Base(files[0])
+	tmpl := template.Must(template.New(tname).Funcs(funcMap).ParseFS(fsys, files...))
+	r.Add(name, tmpl)
+	return tmpl
+}
+
 // AddFromString supply add template from strings
 func (r Render) AddFromString(name, templateString string) *template.Template {
 	tmpl := template.Must(template.New(name).Parse(templateString))
@@ -65,7 +118,11 @@ func (r Render) AddFromString(name, templateString string) *template.Template {
 }
 
 // AddFromStringsFuncs supply add template from strings
-func (r Render) AddFromStringsFuncs(name string, funcMap template.FuncMap, templateStrings ...string) *template.Template {
+func (r Render) AddFromStringsFuncs(
+	name string,
+	funcMap template.FuncMap,
+	templateStrings ...string,
+) *template.Template {
 	tmpl := template.New(name).Funcs(funcMap)
 
 	for _, ts := range templateStrings {
@@ -76,10 +133,49 @@ func (r Render) AddFromStringsFuncs(name string, funcMap template.FuncMap, templ
 	return tmpl
 }
 
+// AddFromStringsFuncsWithOptions supply add template from strings with options
+func (r Render) AddFromStringsFuncsWithOptions(
+	name string,
+	funcMap template.FuncMap,
+	options TemplateOptions,
+	templateStrings ...string,
+) *template.Template {
+	tmpl := template.New(name).
+		Delims(options.LeftDelimiter, options.RightDelimiter).
+		Funcs(funcMap)
+
+	for _, ts := range templateStrings {
+		tmpl = template.Must(
+			tmpl.Parse(ts),
+		).Delims(options.LeftDelimiter, options.RightDelimiter)
+	}
+
+	r.Add(name, tmpl)
+	return tmpl
+}
+
 // AddFromFilesFuncs supply add template from file callback func
 func (r Render) AddFromFilesFuncs(name string, funcMap template.FuncMap, files ...string) *template.Template {
 	tname := filepath.Base(files[0])
 	tmpl := template.Must(template.New(tname).Funcs(funcMap).ParseFiles(files...))
+	r.Add(name, tmpl)
+	return tmpl
+}
+
+// AddFromFilesFuncsWithOptions supply add template from file callback func with options
+func (r Render) AddFromFilesFuncsWithOptions(
+	name string,
+	funcMap template.FuncMap,
+	options TemplateOptions,
+	files ...string,
+) *template.Template {
+	tname := filepath.Base(files[0])
+	tmpl := template.Must(
+		template.New(tname).
+			Delims(options.LeftDelimiter, options.RightDelimiter).
+			Funcs(funcMap).
+			ParseFiles(files...),
+	)
 	r.Add(name, tmpl)
 	return tmpl
 }
