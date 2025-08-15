@@ -1,2 +1,9 @@
-cmd/tomll/tomll
-cmd/tomljson/tomljson
+.github/
+.vscode/
+screenshots/
+.gitignore
+logo.png
+Makefile
+README.md
+renovate.json
+testData.go
