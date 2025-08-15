@@ -1,13 +1,14 @@
 package manager
 
 import (
-	"TraefikAccessControl/models"
-	"TraefikAccessControl/repository"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"TraefikAccessControl/models"
+	"TraefikAccessControl/repository"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -63,7 +64,8 @@ func (mgr *SiteManager) checkAllSitesConfig() {
 		return
 	}
 	for _, site := range sites {
-		mgr.CheckSiteConfig(site)
+		checkErr := mgr.CheckSiteConfig(site)
+		log.WithError(checkErr).WithField("site", site.Host).Warn("Failed to check site config")
 	}
 }
 
@@ -75,7 +77,7 @@ func (mgr *SiteManager) CheckSiteConfig(site *models.Site) (err error) {
 	}
 
 	client := &http.Client{}
-	req, _ := http.NewRequest("GET", requestURL.String(), nil)
+	req, err := http.NewRequest("GET", requestURL.String(), nil)
 	if err != nil {
 		log.WithFields(log.Fields{"err": err, "url": requestURL.String()}).Error("Failed to create request")
 	}
@@ -132,7 +134,10 @@ func (mgr *SiteManager) CreateSite(site *models.Site) (err error) {
 		return fmt.Errorf("Failed to save site")
 	}
 
-	mgr.CheckSiteConfig(site)
+	checkErr := mgr.CheckSiteConfig(site)
+	if checkErr != nil {
+		createLog.WithField("err", checkErr).Error("Failed to check site config after creation")
+	}
 
 	return
 }
@@ -140,7 +145,7 @@ func (mgr *SiteManager) CreateSite(site *models.Site) (err error) {
 func (mgr *SiteManager) GetSite(host, path string) (site *models.Site, err error) {
 	sites, err := mgr.siteRep.GetByHost(host)
 
-	var matchLength = -1
+	matchLength := -1
 	for _, checkSite := range sites {
 		if strings.HasPrefix(path, checkSite.PathPrefix) && len(checkSite.PathPrefix) > matchLength {
 			site = checkSite
@@ -173,7 +178,8 @@ func (mgr *SiteManager) UpdateSite(site *models.Site, checkSiteConfig bool) (err
 	err = mgr.siteRep.Update(site)
 
 	if checkSiteConfig {
-		mgr.CheckSiteConfig(site)
+		checkErr := mgr.CheckSiteConfig(site)
+		log.WithError(checkErr).WithField("site", site.Host).Warn("Failed to check site config after update")
 	}
 
 	return err

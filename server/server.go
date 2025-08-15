@@ -1,13 +1,14 @@
 package server
 
 import (
-	"TraefikAccessControl/manager"
-	"TraefikAccessControl/models"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"TraefikAccessControl/manager"
+	"TraefikAccessControl/models"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/weppos/publicsuffix-go/publicsuffix"
@@ -35,13 +36,22 @@ type Server struct {
 	Router         *gin.Engine
 	cookieName     string
 	userHeaderName string
+	externalUrl    *url.URL
 }
 
-func NewServer(cookieName, userHeaderName string) *Server {
+func NewServer(cookieName, userHeaderName string, externalUrlStr *string) *Server {
+	var externalUrl *url.URL
+	if externalUrlStr != nil {
+		var err error
+		externalUrl, err = url.Parse(*externalUrlStr)
+		log.WithField("external_url", externalUrlStr).WithError(err).Warn("Could not parse external URL, using request URL")
+	}
+
 	s := &Server{
 		Router:         gin.New(),
 		cookieName:     cookieName,
 		userHeaderName: userHeaderName,
+		externalUrl:    externalUrl,
 	}
 	s.parseTemplates()
 	s.buildRoutes()
@@ -87,19 +97,20 @@ func (s *Server) accessHandler() gin.HandlerFunc {
 			return
 		}
 
-		var accessGranted = false
-		var promptBasicAuth = false
+		var accessGranted bool
+		var checkErr error
 		var user *models.User
-		var completeURLString = completeURL.String()
+		promptBasicAuth := false
+		completeURLString := completeURL.String()
 
 		if cookie, err := c.Request.Cookie(s.cookieName); err == nil {
 			requestLogger.Info("Cookie request")
 
-			accessGranted, user, err = manager.GetAccessManager().CheckAccessToken(host, path, cookie.Value, false, requestLogger)
+			accessGranted, user, checkErr = manager.GetAccessManager().CheckAccessToken(host, path, cookie.Value, false, requestLogger)
 		} else if username, password, hasAuth := c.Request.BasicAuth(); hasAuth {
 			requestLogger.WithField("username", username).Info("BasicAuth request")
 
-			accessGranted, user, err = manager.GetAccessManager().CheckAccessCredentials(host, path, username, password, true, requestLogger)
+			accessGranted, user, checkErr = manager.GetAccessManager().CheckAccessCredentials(host, path, username, password, true, requestLogger)
 		} else if bearer := c.Request.Header.Get("Authorization"); bearer != "" {
 			requestLogger.Info("Bearer request")
 
@@ -107,11 +118,17 @@ func (s *Server) accessHandler() gin.HandlerFunc {
 			if len(bearerParts) == 2 {
 				bearer = strings.TrimSpace(bearerParts[1])
 			}
-			accessGranted, user, err = manager.GetAccessManager().CheckAccessToken(host, path, bearer, true, requestLogger)
+			accessGranted, user, checkErr = manager.GetAccessManager().CheckAccessToken(host, path, bearer, true, requestLogger)
 		} else {
 			requestLogger.Info("No auth information in request")
 
-			accessGranted, promptBasicAuth, err = manager.GetAccessManager().CheckAnonymousAccess(host, path, requestLogger)
+			accessGranted, promptBasicAuth, checkErr = manager.GetAccessManager().CheckAnonymousAccess(host, path, requestLogger)
+		}
+
+		if checkErr != nil {
+			log.WithError(checkErr).Error("Error while checking access")
+			c.String(http.StatusInternalServerError, "Error while checking access")
+			return
 		}
 
 		isBrowser := strings.Contains(c.Request.UserAgent(), "Mozilla")
@@ -135,6 +152,10 @@ func (s *Server) accessHandler() gin.HandlerFunc {
 
 func (s *Server) getRedirectURL(reqURL url.URL, path string, origURL, errVal, successVal *string) string {
 	redirectURL := reqURL
+	if s.externalUrl != nil {
+		redirectURL = *s.externalUrl
+	}
+
 	redirectURL.Path = path
 	q := redirectURL.Query()
 	if origURL != nil {
@@ -180,7 +201,7 @@ func (s *Server) fillUserFromCookie() gin.HandlerFunc {
 func (s *Server) userMustBeValid(forAPI bool, hasToBeAdmin bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user, ok := c.Get(userContextKey)
-		if ok == false || user == nil {
+		if !ok || user == nil {
 			if forAPI {
 				c.String(http.StatusUnauthorized, "Not authenticated")
 			} else {
@@ -216,7 +237,7 @@ func (s *Server) loginHandler() gin.HandlerFunc {
 			return
 		}
 
-		maxAge := int(token.ExpiresAt.Sub(time.Now()).Seconds())
+		maxAge := int(time.Until(token.ExpiresAt).Seconds())
 		host, err := publicsuffix.Domain(c.Request.Host)
 		if err != nil {
 			log.WithFields(log.Fields{"host": c.Request.Host, "err": err}).Error("Could not determine domain, use host instead")
@@ -237,7 +258,8 @@ func (s *Server) logoutHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		cookie, err := c.Request.Cookie(s.cookieName)
 		if err == nil {
-			manager.GetAuthManager().DeleteToken(cookie.Value)
+			deleteErr := manager.GetAuthManager().DeleteToken(cookie.Value)
+			log.WithError(deleteErr).Warn("Failed to delete token during logout")
 		}
 		c.SetCookie(s.cookieName, "", -1, "", "", false, true)
 		c.Redirect(http.StatusFound, s.getRedirectURL(*c.Request.URL, "/login", nil, nil, &successLogout))

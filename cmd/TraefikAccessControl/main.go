@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"os"
 	"strconv"
 
 	"TraefikAccessControl/manager"
@@ -11,13 +12,30 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
+
 func main() {
-	dbNamePtr := flag.String("db_name", "tac.db", "Path of the database file")
-	importNamePtr := flag.String("import_name", "", "Path of an file to import")
-	forceImportPtr := flag.Bool("force_import", false, "Force the import of the given file, deletes all existing data")
-	cookieNamePtr := flag.String("cookie_name", "tac_token", "Cookie name used")
-	userHeaderNamePtr := flag.String("user_header_name", "X-TAC-User", "Header name that contains the username after successful auth")
-	portPtr := flag.Int("port", 4181, "Port on which the application will run")
+	// Priority order for configuration: flag > env > default
+	dbNameDefault := getEnv("DB_NAME", "tac.db")
+	importNameDefault := getEnv("IMPORT_NAME", "")
+	forceImportDefault := getEnv("FORCE_IMPORT", "false")
+	cookieNameDefault := getEnv("COOKIE_NAME", "tac_token")
+	userHeaderNameDefault := getEnv("USER_HEADER_NAME", "X-TAC-User")
+	portDefault := getEnv("PORT", "4181")
+	externalURLDefault := getEnv("EXTERNAL_URL", "")
+
+	dbNamePtr := flag.String("db_name", dbNameDefault, "Path of the database file; Can also be set via the DB_NAME environment variable")
+	importNamePtr := flag.String("import_name", importNameDefault, "Path of an file to import; Can also be set via the IMPORT_NAME environment variable")
+	forceImportPtr := flag.Bool("force_import", forceImportDefault == "true", "Force the import of the given file, deletes all existing data; Can also be set via the FORCE_IMPORT environment variable")
+	cookieNamePtr := flag.String("cookie_name", cookieNameDefault, "Cookie name used; Can also be set via the COOKIE_NAME environment variable")
+	userHeaderNamePtr := flag.String("user_header_name", userHeaderNameDefault, "Header name that contains the username after successful auth; Can also be set via the USER_HEADER_NAME environment variable")
+	portPtr := flag.Int("port", func() int { p, _ := strconv.Atoi(portDefault); return p }(), "Port on which the application will run; Can also be set via the PORT environment variable")
+	externalUrlPtr := flag.String("external_url", externalURLDefault, "External URL of the application; Can also be set via the EXTERNAL_URL environment variable")
 	flag.Parse()
 
 	err := repository.InitDatabaseConnection(*dbNamePtr)
@@ -54,13 +72,19 @@ func main() {
 		}
 	}
 
-	if cnt, err := authMgr.GetUserCount(); err == nil && cnt == 0 {
-		authMgr.CreateFirstUser()
+	if count, err := authMgr.GetUserCount(); err == nil && count == 0 {
+		createErr := authMgr.CreateFirstUser()
+		if createErr != nil {
+			log.WithError(createErr).Error("Failed to create first user")
+		}
 	}
 
-	srv := server.NewServer(*cookieNamePtr, *userHeaderNamePtr)
+	var externalURL *string
+	if externalUrlPtr != nil && *externalUrlPtr != "" {
+		externalURL = externalUrlPtr
+	}
+	srv := server.NewServer(*cookieNamePtr, *userHeaderNamePtr, externalURL)
 
-	// Start
 	log.WithField("port", *portPtr).Info("Listening on specified port")
 	log.Info(srv.Router.Run(":" + strconv.Itoa(*portPtr)))
 
