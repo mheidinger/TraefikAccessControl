@@ -2,7 +2,7 @@ name: Test & Build & Push
 
 on:
   push:
-    branches: ["main"]
+  pull_request:
 
 jobs:
   test:
@@ -56,5 +56,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/mheidinger/traefik-access-control:latest
             ghcr.io/mheidinger/traefik-access-control:${{ github.sha }}
+            ${{ startsWith(github.ref, 'refs/tags/') && format('ghcr.io/mheidinger/traefik-access-control:{0}', github.ref_name) || null }}
+            ${{ startsWith(github.ref, 'refs/tags/') && 'ghcr.io/mheidinger/traefik-access-control:latest' || null }}
+          cache-from: type=gha,scope=${{ github.ref_name }}-traefik-access-control
+          cache-to: type=gha,mode=max,scope=$${{ github.ref_name }}-traefik-access-control
