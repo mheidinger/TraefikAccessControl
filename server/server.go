@@ -127,11 +127,9 @@ func (s *Server) accessHandler() gin.HandlerFunc {
 			accessGranted, promptBasicAuth, checkErr = manager.GetAccessManager().CheckAnonymousAccess(host, path, requestLogger)
 		}
 
-		if checkErr != nil {
-			log.WithError(checkErr).Error("Error while checking access")
-			c.String(http.StatusInternalServerError, "Error while checking access")
-			return
-		}
+		requestLogger.WithError(checkErr).
+			WithFields(log.Fields{"accessGranted": accessGranted, "user": user, "promptBasicAuth": promptBasicAuth}).
+			Info("Access check result")
 
 		isBrowser := strings.Contains(c.Request.UserAgent(), "Mozilla")
 		if accessGranted {
