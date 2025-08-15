@@ -1,6 +1,6 @@
 module TraefikAccessControl
 
-go 1.23.0
+go 1.25
 
 require (
 	github.com/gin-contrib/multitemplate v1.0.1
