@@ -13,6 +13,34 @@ main {
 	height: 1.8em;
 }
 
+/* Mobile optimizations */
+@media only screen and (max-width: 600px) {
+	.brand-logo {
+		font-size: 1.2rem;
+		left: 0.5rem;
+	}
+	
+	.brand-logo img {
+		height: 1.4em;
+	}
+	
+	nav .right {
+		font-size: 0.9rem;
+	}
+	
+	nav .right a {
+		padding: 0 0.5rem;
+	}
+	
+	.container {
+		width: 95%;
+	}
+	
+	.page-footer .container {
+		font-size: 0.9rem;
+	}
+}
+
 .page-footer {
 	padding-bottom: 1em;
 }
