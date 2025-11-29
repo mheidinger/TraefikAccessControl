@@ -39,6 +39,92 @@ main {
 	.page-footer .container {
 		font-size: 0.9rem;
 	}
+	
+	/* Make tables scrollable on mobile */
+	.table-wrapper {
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+		margin-bottom: 1.5rem;
+	}
+	
+	table {
+		min-width: 100%;
+		font-size: 0.85rem;
+	}
+	
+	table th, table td {
+		padding: 8px 5px;
+	}
+	
+	/* Stack form inputs vertically on mobile */
+	.input-field {
+		margin-bottom: 1rem;
+	}
+	
+	/* Make buttons full width on mobile */
+	.btn, button {
+		width: 100%;
+		margin-bottom: 0.5rem;
+	}
+	
+	/* Adjust spacing for headings */
+	h1 {
+		font-size: 2rem;
+	}
+	
+	h4 {
+		font-size: 1.5rem;
+		margin-top: 1.5rem;
+	}
+	
+	/* Better spacing for icons in tables */
+	.material-icons {
+		font-size: 1.2rem;
+	}
+	
+	/* Stack checkboxes and labels better on mobile */
+	label {
+		font-size: 0.9rem;
+	}
+	
+	/* Improve password change section on mobile */
+	.change-password-wrapper {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	
+	.change-password-wrapper .input-field {
+		width: 100%;
+	}
+	
+	.change-password-wrapper button {
+		width: 100%;
+	}
+	
+	/* Allow long tokens to wrap on mobile */
+	table td {
+		word-break: break-all;
+		overflow-wrap: break-word;
+	}
+	
+	/* Ensure proper spacing for checkbox labels */
+	[type="checkbox"]+span {
+		padding-left: 30px;
+		font-size: 0.9rem;
+	}
+	
+	/* Better button spacing on mobile */
+	.row {
+		margin-bottom: 10px;
+	}
+	
+	/* Ensure inputs don't overflow */
+	input[type="text"],
+	input[type="password"],
+	select {
+		font-size: 1rem;
+	}
 }
 
 .page-footer {
@@ -51,6 +137,11 @@ main {
 
 #sitePromptBasicAuthLabel, #siteAnonymousAccessLabel {
 	position: relative;
+}
+
+/* Ensure select dropdowns are properly styled */
+select {
+	display: block;
 }
 
 #infoCard {

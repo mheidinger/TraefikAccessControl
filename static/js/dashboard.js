@@ -11,6 +11,11 @@
 
 	const createBearerButton = document.getElementById("bearerCreateButton");
 	createBearerButton.onclick = onCreateBearer;
+	
+	const createBearerButtonMobile = document.getElementById("bearerCreateButtonMobile");
+	if (createBearerButtonMobile) {
+		createBearerButtonMobile.onclick = onCreateBearer;
+	}
 
 	function onDeleteBearer(event) {
 		event.preventDefault();

@@ -5,91 +5,112 @@
 	<h1 class="header center orange-text">Edit Site</h1>
 
 	<div class="container">
-		<div class="input-field">
-			<input value="{{.site.Host}}" id="siteHostField" type="text">
-			<label for="siteHostField">Host</label>
+		<div class="row">
+			<div class="input-field col s12">
+				<input value="{{.site.Host}}" id="siteHostField" type="text">
+				<label for="siteHostField" class="active">Host</label>
+			</div>
 		</div>
-		<div class="input-field">
-			<input value="{{.site.PathPrefix}}" id="sitePathPrefixField" type="text">
-			<label for="sitePathPrefixField">Path-Prefix</label>
+		<div class="row">
+			<div class="input-field col s12">
+				<input value="{{.site.PathPrefix}}" id="sitePathPrefixField" type="text">
+				<label for="sitePathPrefixField" class="active">Path-Prefix</label>
+			</div>
 		</div>
-		<div class="valign-wrapper">
-			<b>Config OK:</b>
-			{{if .site.ConfigOK}}
-			<i class="material-icons configIndicator">done</i>
-			{{else}}
-			<i class="material-icons configIndicator">clear</i>
-			{{end}}
-			<button class="btn-floating waves-effect waves-light right-align" id="siteRefreshConfigOKButton">
-				<i class="material-icons right">refresh</i>
-			</button>
+		<div class="row">
+			<div class="col s12 valign-wrapper">
+				<b>Config OK:</b>
+				{{if .site.ConfigOK}}
+				<i class="material-icons configIndicator">done</i>
+				{{else}}
+				<i class="material-icons configIndicator">clear</i>
+				{{end}}
+				<button class="btn-floating waves-effect waves-light" id="siteRefreshConfigOKButton" style="margin-left: 1rem;">
+					<i class="material-icons">refresh</i>
+				</button>
+			</div>
 		</div>
-		<div class="input-field">
-			<label id="sitePromptBasicAuthLabel">
-				<input type="checkbox" class="filled-in" id="sitePromptBasicAuthField" {{if .site.PromptBasicAuth}}
-					checked="checked" {{end}} />
-				<span>Prompt Basic Auth</span>
-			</label>
+		<div class="row">
+			<div class="col s12">
+				<label id="sitePromptBasicAuthLabel">
+					<input type="checkbox" class="filled-in" id="sitePromptBasicAuthField" {{if .site.PromptBasicAuth}}
+						checked="checked" {{end}} />
+					<span>Prompt Basic Auth</span>
+				</label>
+			</div>
 		</div>
-		<div class="input-field">
-			<label id="siteAnonymousAccessLabel">
-				<input type="checkbox" class="filled-in" id="siteAnonymousAccessField" {{if .site.AnonymousAccess}}
-					checked="checked" {{end}} />
-				<span>Anonymous Access</span>
-			</label>
+		<div class="row">
+			<div class="col s12">
+				<label id="siteAnonymousAccessLabel">
+					<input type="checkbox" class="filled-in" id="siteAnonymousAccessField" {{if .site.AnonymousAccess}}
+						checked="checked" {{end}} />
+					<span>Anonymous Access</span>
+				</label>
+			</div>
 		</div>
-		<button class="btn waves-effect waves-light right-align" id="siteEditButton">
-			Save
-			<i class="material-icons right">save</i>
-		</button>
+		<div class="row">
+			<div class="col s12">
+				<button class="btn waves-effect waves-light" id="siteEditButton" style="width: 100%;">
+					Save
+					<i class="material-icons right">save</i>
+				</button>
+			</div>
+		</div>
 	</div>
 
 	{{if not .site.AnonymousAccess}}
 	<div class="container">
 		<h4 class="orange-text">Users mapped to site:</h4>
-		<table class="responsive-table striped">
-			<thead>
-				<tr>
-					<th>Username</th>
-					<th class="right-align">BasicAuth Allowed</th>
-					<th class="right-align">Delete</th>
-				</tr>
-			</thead>
-			<tbody>
-				{{range .siteMappings}}
-				<tr>
-					<td>{{.User.Username}}</td>
-					<td class="right-align">
-						{{if .SiteMapping.BasicAuthAllowed}}
-						<i class="material-icons">done</i>
-						{{else}}
-						<i class="material-icons">clear</i>
-						{{end}}
-					</td>
-					<td class="right-align"><a class="mappingDeleteButton" href="#"><i data-userid="{{.User.ID}}"
-								class="material-icons">delete_forever</i></a></td>
-				</tr>
-				{{end}}
-				<tr>
-					<td>
-						<select id="mappingUserField">
-							<option value="" disabled selected>Select user</option>
-							{{range .availUsers}}
-							<option value="{{.ID}}">{{.Username}}</option>
+		<div class="table-wrapper">
+			<table class="responsive-table striped">
+				<thead>
+					<tr>
+						<th>Username</th>
+						<th class="right-align">BasicAuth Allowed</th>
+						<th class="right-align">Delete</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{range .siteMappings}}
+					<tr>
+						<td>{{.User.Username}}</td>
+						<td class="right-align">
+							{{if .SiteMapping.BasicAuthAllowed}}
+							<i class="material-icons">done</i>
+							{{else}}
+							<i class="material-icons">clear</i>
 							{{end}}
-						</select>
-					</td>
-					<td class="right-align"><label><input type="checkbox" class="filled-in"
-								id="mappingBasicAuthField" /><span></span></label></td>
-					<td>
-						<button class="btn waves-effect waves-light right" id="mappingAddButton">
-							Add
-							<i class="material-icons right">add</i>
-						</button>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+						</td>
+						<td class="right-align"><a class="mappingDeleteButton" href="#"><i data-userid="{{.User.ID}}"
+									class="material-icons">delete_forever</i></a></td>
+					</tr>
+					{{end}}
+				</tbody>
+			</table>
+		</div>
+		<div class="row" style="margin-top: 1rem;">
+			<div class="input-field col s12 m6">
+				<select id="mappingUserField">
+					<option value="" disabled selected>Select user</option>
+					{{range .availUsers}}
+					<option value="{{.ID}}">{{.Username}}</option>
+					{{end}}
+				</select>
+				<label>User</label>
+			</div>
+			<div class="col s12 m3">
+				<label>
+					<input type="checkbox" class="filled-in" id="mappingBasicAuthField" />
+					<span>BasicAuth Allowed</span>
+				</label>
+			</div>
+			<div class="col s12 m3">
+				<button class="btn waves-effect waves-light" id="mappingAddButton" style="width: 100%;">
+					Add User
+					<i class="material-icons right">add</i>
+				</button>
+			</div>
+		</div>
 	</div>
 	{{end}}
 

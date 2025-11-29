@@ -6,80 +6,90 @@
 
 	<div>
 		<h4 class="orange-text">Your available sites:</h4>
-		<table class="responsive-table striped">
-			<thead>
-				<tr>
-					<th>Host</th>
-					<th>Path-Prefix</th>
-					<th class="right-align">BasicAuth Allowed</th>
-				</tr>
-			</thead>
-			<tbody>
-				{{range .siteMappings}}
-				{{if and (.Site) (.SiteMapping) }}
-				<tr>
-					<td>{{.Site.Host}}</td>
-					<td>{{.Site.PathPrefix}}</td>
-					<td class="right-align">
-						{{if .SiteMapping.BasicAuthAllowed}}
-						<i class="material-icons">done</i>
-						{{else}}
-						<i class="material-icons">clear</i>
-						{{end}}
-					</td>
-				</tr>
-				{{else}}
-				<tr class="emptyRow"></tr>
-				{{end}}
-				{{end}}
-			</tbody>
-		</table>
+		<div class="table-wrapper">
+			<table class="responsive-table striped">
+				<thead>
+					<tr>
+						<th>Host</th>
+						<th>Path-Prefix</th>
+						<th class="right-align">BasicAuth Allowed</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{range .siteMappings}}
+					{{if and (.Site) (.SiteMapping) }}
+					<tr>
+						<td>{{.Site.Host}}</td>
+						<td>{{.Site.PathPrefix}}</td>
+						<td class="right-align">
+							{{if .SiteMapping.BasicAuthAllowed}}
+							<i class="material-icons">done</i>
+							{{else}}
+							<i class="material-icons">clear</i>
+							{{end}}
+						</td>
+					</tr>
+					{{else}}
+					<tr class="emptyRow"></tr>
+					{{end}}
+					{{end}}
+				</tbody>
+			</table>
+		</div>
 	</div>
 
 	<div>
 		<h4 class="orange-text">Your bearer tokens:</h4>
-		<table class="responsive-table striped">
-			<thead>
-				<tr>
-					<th>Name</th>
-					<th>Token</th>
-					<th class="right-align">Delete</th>
-				</tr>
-			</thead>
-			<tbody>
-				{{range .tokens}}
-				<tr>
-					<td>{{.Name}}</td>
-					<td>{{.Token}}</td>
-					<td class="right-align"><a class="bearerDeleteButton" href="#"><i data-tokenname="{{.Name}}"
-								class="material-icons">delete_forever</i></a></td>
-				</tr>
-				{{end}}
-				<tr>
-					<td><input type="text" id="bearerNameField" placeholder="Name"></td>
-					<td></td>
-					<td>
-						<button class="btn waves-effect waves-light right" id="bearerCreateButton">
-							Create New
-							<i class="material-icons right">add</i>
-						</button>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+		<div class="table-wrapper">
+			<table class="responsive-table striped">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Token</th>
+						<th class="right-align">Delete</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{range .tokens}}
+					<tr>
+						<td>{{.Name}}</td>
+						<td>{{.Token}}</td>
+						<td class="right-align"><a class="bearerDeleteButton" href="#"><i data-tokenname="{{.Name}}"
+									class="material-icons">delete_forever</i></a></td>
+					</tr>
+					{{end}}
+					<tr>
+						<td><input type="text" id="bearerNameField" placeholder="Name"></td>
+						<td></td>
+						<td>
+							<button class="btn waves-effect waves-light right hide-on-small-only" id="bearerCreateButton">
+								Create New
+								<i class="material-icons right">add</i>
+							</button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<button class="btn waves-effect waves-light hide-on-med-and-up" id="bearerCreateButtonMobile" style="width: 100%; margin-top: 1rem;">
+			Create New Token
+			<i class="material-icons right">add</i>
+		</button>
 	</div>
 
 	<div>
 		<h4 class="orange-text">Change Password:</h4>
 		<div class="row">
-			<div class="input-field col s10">
+			<div class="input-field col s12 m10">
 				<input id="changePasswordField" type="password">
 				<label for="changePasswordField">Password</label>
 			</div>
-			<button class="btn waves-effect waves-light col s2" id="changePasswordButton">
-				Change
-				<i class="material-icons right">edit</i>
-			</button>
+			<div class="col s12 m2">
+				<button class="btn waves-effect waves-light" id="changePasswordButton" style="width: 100%;">
+					Change
+					<i class="material-icons right">edit</i>
+				</button>
+			</div>
 		</div>
 	</div>
 
