@@ -1,9 +1,2 @@
-.github/
-.vscode/
-screenshots/
-.gitignore
-logo.png
-Makefile
-README.md
-renovate.json
-testData.go
+cmd/tomll/tomll
+cmd/tomljson/tomljson
